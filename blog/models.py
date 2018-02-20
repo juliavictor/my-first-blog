@@ -10,6 +10,7 @@ class Post(models.Model):
             default=timezone.now)
     published_date = models.DateTimeField(
             blank=True, null=True)
+    image = models.ImageField(upload_to='img', default="default-image.png")
 
     def approved_comments(self):
         return self.comments.filter(approved_comment=True)
