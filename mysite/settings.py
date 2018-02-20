@@ -120,3 +120,15 @@ LOGIN_REDIRECT_URL = '/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
+
+# Настройки для изображений в постах
+MEDIA_ROOT = (
+os.path.join(BASE_DIR, 'images')
+)
+
+MEDIA_URL = '/media/'
