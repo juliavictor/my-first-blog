@@ -126,7 +126,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-# Настройки для изображений в постах
+# Images
 MEDIA_ROOT = (
 os.path.join(BASE_DIR, 'images')
 )
