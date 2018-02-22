@@ -1,13 +1,11 @@
 {% load staticfiles %}
 <html>
+<!--
     <head>
         <title>За и против</title>
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="{% static 'css/blog.css' %}">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Roboto:400,900&amp;subset=cyrillic" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
     </head>
     <body>
         <div class="page-header">
@@ -23,10 +21,77 @@
         <div class="content container">
             <div class="row">
                 <div class="col-md-8">
+
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+-->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro and Contra</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700">
+    <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+</head>
+
+<body>
+    <div>
+    <div class="header-blue">
+        <nav class="navbar navbar-default navigation-clean-search">
+        <div class="container">
+            <div class="navbar-header"><a class="navbar-brand navbar-link" href="/">За и против</a>
+            <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+            </div>
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <!-- <ul class="nav navbar-nav">
+                    <li class="active" role="presentation"><a href="#">Link</a></li>
+                </ul>
+                <form class="navbar-form navbar-left" target="_self">
+                <div class="form-group">
+                     <label class="control-label" for="search-field"><i class="glyphicon glyphicon-search"></i></label>
+                     <input class="form-control search-field" type="search" name="search" id="search-field">
+                </div>
+                </form> -->
+                {% if user.is_authenticated %}
+                <p class="navbar-text navbar-right">
+                    <a class="navbar-link login" href="{% url 'post_new' %}">Добавить пост</a>
+                    <a class="btn btn-default action-button" role="button" href="{% url 'logout' %}">Выйти</a>
+                </p>
+                {% else %}
+                <p class="navbar-text navbar-right">
+                    <!-- здесь может быть ссылка на регистрацию-->
+                    <a class="btn btn-default action-button" role="button" href="{% url 'login' %}">Войти</a>
+                </p>
+                {% endif %}
+            </div>
+       </div>
+        </nav></div>
+        <div class="content container">
+            <div class="row">
+                <div class="col-md-8">
                 {% block content %}
                 {% endblock %}
                 </div>
             </div>
         </div>
-    </body>
+       <!--<div class="container hero">
+           <div class="row">
+           <div class="col-lg-5 col-lg-offset-1 col-md-6 col-md-offset-0">
+               <h1>The revolution is here.</h1>
+               <p>Mauris egestas tellus non ex condimentum, ac ullamcorper sapien dictum. Nam consequat neque quis sapien viverra convallis. In non tempus lorem. </p>
+               <button class="btn btn-default btn-lg action-button" type="button">Learn More</button>
+           </div>
+           </div>
+       </div>
+    </div>
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+
 </html>
