@@ -7,13 +7,14 @@
         <div class="row">
             {% for post in posts %}
             <div class="col-sm-3">
-                <div class="thumbnail text-center">
-                    <div class="img-gradien">
-                    <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
+                <div class="thumbnail text-center item">
+                    <a href="{% url 'post_detail' pk=post.pk %}" >
+                    <div class="item">
+                        <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
                     </div>
-                    <div class="caption">
-                       <a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a>
-                    </div>
+                    <div class="caption"> {{ post.title }} </div>
+                    <!--<div class="caption" id="tag"> Человек и общество </div>-->
+                    </a>
                 </div>
              </div>
 
