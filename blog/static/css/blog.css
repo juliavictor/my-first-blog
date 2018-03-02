@@ -81,6 +81,7 @@ body {
     text-align: center;
     background-color: rgb(255, 255, 255);
 
+
 }
 
 #caption {
@@ -97,14 +98,44 @@ body {
     font-size: 10pt;
     display:inline-block;
     text-decoration: none;
-    padding: 5px;
+    padding: 5px 5px 5px 5px;
 
+}
+
+#align-fix {
+    text-align: left;
+
+}
+
+#badge {
+    margin: 5px 0px 5px 0px;
+
+    /* position: absolute; */
+    z-index:1;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: 10pt;
+
+    /* background: #f8f8ff;
+    color: black;*/
+    background: none;
+    color: #8b8378;
+    border: thin solid #8b8378;
+
+    /* display: none;*/
 }
 
 
 
+/*
+when on parent (thumbnail, change caption)
+ e.g show something on the card on hover (tag or smth else)
+.thumbnail:hover #badge{
+    display: inline;
+}
+
+
 #tag {
-    position: absolute;
     top: 0;
     right: 0;
     width: 100%;
@@ -115,12 +146,7 @@ body {
     display: none;
 }
 
-/*
-when on parent (thumbnail, change caption)
- e.g show something on the card on hover (tag or smth else)*/
-.thumbnail:hover #tag{
-    display: inline;
-}
+
 
 
 /*
@@ -460,6 +486,7 @@ when on parent (thumbnail, change caption)
 .item {
   position: relative;
   overflow: hidden;
+
 }
 .item img {
   max-width: 100%;

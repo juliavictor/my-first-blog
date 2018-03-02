@@ -15,7 +15,12 @@
         {% endif %}
         <h1>{{ post.title }}</h1>
         <p><img src="{{ post.image.url }} " class="img-responsive watch-right"/></p>
+        <a href="" id="align-fix">
+            <div><span class="badge badge-light "  id="badge">
+                {{ post.get_tag_display }}
+            </span></div></a>
         <p>{{ post.text|linebreaksbr }}</p>
+
     </div>
     <hr>
     <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Add comment</a>

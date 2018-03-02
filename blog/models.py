@@ -1,11 +1,20 @@
 from django.db import models
 from django.utils import timezone
+from django import forms
 
+STATUS_CHOICES = (
+    (1, ("Основной тег")),
+    (2, ("Человек и общество")),
+    (3, ("Язык и речь")),
+    (4, ("История и археология")),
+    (5, ("Leading candidate"))
+)
 
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
     text = models.TextField()
+    tag = models.IntegerField(choices=STATUS_CHOICES, default=1)
     created_date = models.DateTimeField(
             default=timezone.now)
     published_date = models.DateTimeField(
