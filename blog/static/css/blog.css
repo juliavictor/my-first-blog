@@ -74,14 +74,12 @@ body {
     color: #000000;
 }
 
-/* Captions over images */
+/* Captions */
 
 .thumbnail {
     position: relative;
     text-align: center;
     background-color: rgb(255, 255, 255);
-
-
 }
 
 #caption {
@@ -102,29 +100,25 @@ body {
 
 }
 
+
 #align-fix {
     text-align: left;
-
 }
 
 #badge {
     margin: 5px 0px 5px 0px;
-
     /* position: absolute; */
     z-index:1;
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: 10pt;
-
     /* background: #f8f8ff;
     color: black;*/
     background: none;
     color: #8b8378;
     border: thin solid #8b8378;
 
-    /* display: none;*/
 }
-
 
 
 /*
@@ -135,64 +129,7 @@ when on parent (thumbnail, change caption)
 }
 
 
-#tag {
-    top: 0;
-    right: 0;
-    width: 100%;
-    height: 40px;
-    background:linear-gradient(135deg, #21a9af, #21a9af);
-    margin: 20px 0px 20px 20px;
-    font-size: 9pt;
-    display: none;
-}
-
-
-
-
-/*
-.captions:after {
-  content:'';
-  position:absolute;
-  left:0; bottom:100%;
-  width:100%; height:100%;
-  display:inline-block;
-  background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(255, 255, 255, 0.8) 80%); /* FF3.6+ */
-  /*background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255, 255, 255, 0.8)), color-stop(100%,rgba(0,47,75,0.5))); /* Chrome,Safari4+ */
-  /*background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 0.8) 80%); /* Chrome10+,Safari5.1+ */
-  /*background: -o-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 0.8) 80%); /* Opera 11.10+ */
-  /*background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 0.8) 80%); /* IE10+ */
-  /*background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 0.8) 80%); /* W3C */
-  /*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
-/*}*/
-
-/* Gradients over images */
-
-
-.img-gradient{
-  position:relative;
-  display:inline-block;
-}
-
-.img-gradient:after {
-  content:'';
-  position:absolute;
-  left:0; bottom:0;
-  width:100%; height:50%;
-  display:inline-block;
-  background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(255, 255, 255, 1) 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255, 255, 255, 1)), color-stop(100%,rgba(0,47,75,0.5))); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 1) 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 1) 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 1) 100%); /* IE10+ */
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(255, 255, 255, 1) 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
-}
-
-.img-gradient img{
-  display:block;
-}
-
-/*new stuff*/
+/* Design template (all to the next comment) */
 .header-blue{
   background:linear-gradient(135deg, #172a74, #21a9af);
   background-color:#184e8e;
@@ -466,23 +403,13 @@ when on parent (thumbnail, change caption)
   opacity:0.2;
 }
 
-/* hover effect*/
+/* Image box shadow on hover */
 .thumbnail:hover {
      box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
 }
 
 
-/* new stuff */
-#arrow {
-  position: relative;
-  top: 0px;
-  transition: top ease 0.5s;
-}
-
-#arrow:hover {
-  top: -5px;
-}
-
+/* Image scaling on hover */
 .item {
   position: relative;
   overflow: hidden;
@@ -499,47 +426,4 @@ when on parent (thumbnail, change caption)
   -moz-transform: scale(1.05);
   -webkit-transform: scale(1.05);
   transform: scale(1.051);
-}
-
-/* testing */
-.section-box-nine{
-        height: 250px;
-
-        color: #fff;
-        position: relative;
-        overflow:hidden;
-    }
-    .section-box-nine figure {
-        position: absolute;
-        text-align: center;
-        padding: 19px;
-        width: 100%;
-        height: 100%;
-    }
-    .section-box-nine img{
-        height: 100%;
-        position: absolute;
-        transition: ease-in-out .5s;
-        -webkit-transition: ease-in-out .5s;
-        -moz-transition: ease-in-out .5s;
-    }
-    .section-box-nine:hover img{
-        transform: scale(3);
-        -webkit-transform: scale(3);
-        -moz-transform: scale(3);
-        opacity: 0;
-    }
-
-
-#img {
-    -webkit-filter: brightness(100%);
-}
-
-#img:hover {
-    -webkit-filter: brightness(80%);
-    -webkit-transition: all 1s ease;
-    -moz-transition: all 1s ease;
-    -o-transition: all 1s ease;
-    -ms-transition: all 1s ease;
-    transition: all 1s ease;
 }
