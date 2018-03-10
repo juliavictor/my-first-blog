@@ -417,7 +417,6 @@ when on parent (thumbnail, change caption)
 }
 .item img {
   max-width: 100%;
-
   -moz-transition: all 0.5s;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
@@ -426,4 +425,9 @@ when on parent (thumbnail, change caption)
   -moz-transform: scale(1.05);
   -webkit-transform: scale(1.05);
   transform: scale(1.051);
+}
+
+.item #desat {
+     filter: grayscale(100%);
+     -webkit-filter: grayscale(100%);
 }
