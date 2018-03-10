@@ -9,8 +9,12 @@
             <div class="col-sm-3">
                 <div class="thumbnail text-center item">
                     <a href="{% url 'post_detail' pk=post.pk %}" >
+                    {% if post.pk|stringformat:"s" in request.session.keys %}
+                    <div class="item" id="desat">
+                    {% else %}
                     <div class="item">
-                        <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
+                    {% endif %}
+                    <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
                     </div>
                     </a>
                     <div id="caption"> {{ post.title }} </div>
