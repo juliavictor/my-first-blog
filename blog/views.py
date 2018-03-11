@@ -17,7 +17,7 @@ def post_list(request):
     filter = sum_values.str.contains("[a-z]")
     sum_values = sum_values[~filter]
 
-    print(sum_values, file=sys.stderr)
+    # print(sum_values, file=sys.stderr)
 
     # collect session data on this user
     session_data = recs.loc[recs['session_id'] == request.session.session_key]
