@@ -4,14 +4,39 @@ from .models import Post, Comment
 from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+import pandas as pd
+import numpy as np
+import sys
 
 def post_list(request):
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    recs = pd.read_csv('recommend.csv')
+    if not request.session.session_key:
+        request.session.save()
+    # collect session data on this user
+    session_data = recs.loc[recs['session_id'] == request.session.session_key]
+    if not session_data.empty:
+        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+        for post in session_data.columns[(session_data == 1).iloc[0]]:
+            if post != 'session_id':
+                posts = posts.exclude(id=post).filter(published_date__lte=timezone.now()).order_by('published_date')
+    else:
+        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+
     return render(request, 'blog/post_list.html', {'posts': posts})
 
 
 def post_detail(request, pk):
-    request.session[pk] = 15
+    # After post view we change the table for collaborative filtering
+    recs = pd.read_csv('recommend.csv')
+    # print("post_detail key", file=sys.stderr)
+    # Fix for none session_key
+    if not request.session.session_key:
+        request.session.save()
+    if not any(recs.session_id == request.session.session_key):
+        data = pd.DataFrame({'session_id': [request.session.session_key]})
+        recs = recs.append(data)
+    recs.ix[recs.session_id == request.session.session_key, str(pk)] = "1"
+    recs.to_csv('recommend.csv', encoding='utf-8', index=False)
     post = get_object_or_404(Post, pk=pk)
     return render(request, 'blog/post_detail.html', {'post': post})
 
