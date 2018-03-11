@@ -29,6 +29,27 @@
     color: #828282;
 }
 
+.views {
+    color: #828282;
+    text-align: right;
+}
+
+.column {
+    float: left;
+    width: 49%;
+}
+
+.glyphicon-eye-open:before {
+  margin-right: 5px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 .save {
     float: right;
 }

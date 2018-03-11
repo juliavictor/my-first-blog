@@ -3,9 +3,14 @@
 {% block content %}
     <div class="post">
         {% if post.published_date %}
-            <div class="date">
-                {{ post.published_date }}
+        <div class="row date">
+            <div class="column">{{ post.published_date }}</div>
+            <div class="column views">
+                <span class="glyphicon glyphicon-eye-open" aria-hidden="true">{{ post.views|stringformat:"i" }}
+                </span>
             </div>
+        </div>
+
         {% else %}
             <a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Publish</a>
         {% endif %}
