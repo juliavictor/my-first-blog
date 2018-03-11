@@ -12,6 +12,13 @@ def post_list(request):
     recs = pd.read_csv('recommend.csv')
     if not request.session.session_key:
         request.session.save()
+
+    sum_values = recs.sum(axis=0).astype(str).sort_values(ascending=False)
+    filter = sum_values.str.contains("[a-z]")
+    sum_values = sum_values[~filter]
+
+    print(sum_values, file=sys.stderr)
+
     # collect session data on this user
     session_data = recs.loc[recs['session_id'] == request.session.session_key]
     if not session_data.empty:
@@ -21,6 +28,7 @@ def post_list(request):
                 posts = posts.exclude(id=post).filter(published_date__lte=timezone.now()).order_by('published_date')
     else:
         posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
 
     return render(request, 'blog/post_list.html', {'posts': posts})
 
@@ -35,9 +43,12 @@ def post_detail(request, pk):
     if not any(recs.session_id == request.session.session_key):
         data = pd.DataFrame({'session_id': [request.session.session_key]})
         recs = recs.append(data)
-    recs.ix[recs.session_id == request.session.session_key, str(pk)] = "1"
+    recs.ix[recs.session_id == request.session.session_key, str(pk)] = 1
     recs.to_csv('recommend.csv', encoding='utf-8', index=False)
     post = get_object_or_404(Post, pk=pk)
+    # Unique views counter setting
+    post.views = recs[pk].sum()
+    post.save()
     return render(request, 'blog/post_detail.html', {'post': post})
 
 @login_required

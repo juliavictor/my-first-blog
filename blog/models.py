@@ -3,6 +3,7 @@
 from django.db import models
 from django.utils import timezone
 from django import forms
+from django.core.validators import MinValueValidator
 
 STATUS_CHOICES = (
     (1, ("Язык и речь")),
@@ -22,6 +23,7 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     text = models.TextField()
     tag = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    views = models.PositiveIntegerField(validators=[MinValueValidator(1)], default = 0)
     created_date = models.DateTimeField(
             default=timezone.now)
     published_date = models.DateTimeField(
