@@ -449,6 +449,13 @@ when on parent (thumbnail, change caption)
 }
 
 .item #desat {
-     filter: grayscale(100%);
-     -webkit-filter: grayscale(100%);
+     /*filter: grayscale(100%);
+     -webkit-filter: grayscale(100%);*/
+}
+
+.glyphicon-ok-circle {
+   position: absolute;
+   top: 130px;
+   left: 4px;
+   color: black;
 }
