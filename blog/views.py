@@ -87,7 +87,7 @@ def form_recommendations(request):
         session_data = session_data.drop(['session_id'], axis=1)
 
         # sorting categories list by descending order
-        session_data = session_data.iloc[:, np.argsort(session_data.loc[0])]
+        # session_data = session_data.iloc[:, np.argsort(session_data.loc[0])]
 
         # selecting top 6 categories for this user
         cat_list = session_data.columns.values[-6:]
