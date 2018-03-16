@@ -7,9 +7,11 @@
 .col-sm-3 img {
   object-fit: cover;
   object-position: center;
-  height: 120px;
+  height: 145px;
   width: 200px;
 }
+
+
 
 .col-sm-3 a {
     font-size: 12pt;
@@ -104,20 +106,21 @@ body {
 }
 
 #caption {
-    position: relative;
-    bottom: 0;
+    position: absolute;
+    bottom: 0%;
     left: 0%;
     width: 100%;
-    /* background-color: rgba(0, 0, 0, 1); */
+    background-color: rgba(255, 255, 255, 1);
+    /* background: radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
     background: radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
     background: -webkit-radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
-    background: -moz-radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
+    background: -moz-radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));*/
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: 10pt;
     display:inline-block;
     text-decoration: none;
-    padding: 5px 5px 5px 5px;
+    padding: 4px 4px 4px 4px;
 
 }
 
@@ -434,7 +437,10 @@ when on parent (thumbnail, change caption)
 .item {
   position: relative;
   overflow: hidden;
-
+  text-align: center;
+  display: inline-block;
+  *display:inline; /* ie7 fix */
+  float: none;
 }
 .item img {
   max-width: 100%;

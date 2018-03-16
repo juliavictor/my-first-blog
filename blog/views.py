@@ -31,7 +31,7 @@ def post_list(request):
     #posts = Post.objects
 
     posts = form_recommendations(request)
-    print(posts, file=sys.stderr)
+    # print(posts, file=sys.stderr)
 
     # 1 most popular post
     pop_post = Post.objects
