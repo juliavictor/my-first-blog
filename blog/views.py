@@ -10,7 +10,8 @@ import numpy as np
 import sys
 
 def post_list(request):
-    recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
+    #recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
+    recs = pd.read_csv('recommend.csv')
     if not request.session.session_key:
         request.session.save()
 
@@ -62,7 +63,8 @@ def post_list(request):
 
 def form_recommendations(request):
     # form list of 6 categories
-    recs = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
+    #recs = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
+    recs = pd.read_csv('categories.csv')
 
     # print("post_detail key", file=sys.stderr)
 
@@ -103,7 +105,8 @@ def form_recommendations(request):
     for post in posts:
         recs.ix[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
 
-    recs.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
+    #recs.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
+    recs.to_csv('categories.csv', encoding='utf-8', index=False)
 
     return posts
 
@@ -112,8 +115,10 @@ def form_recommendations(request):
 
 def post_detail(request, pk):
     # After post view we change the table for collaborative filtering
-    recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
-    cats = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
+    #recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
+    recs = pd.read_csv('recommend.csv')
+    #cats = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
+    cats = pd.read_csv('categories.csv')
 
     # print("post_detail key", file=sys.stderr)
     # Fix for none session_key
@@ -134,8 +139,10 @@ def post_detail(request, pk):
 
     cats.ix[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
 
-    recs.to_csv('/home/juliavictor/my-first-blog/recommend.csv', encoding='utf-8', index=False)
-    cats.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
+    #recs.to_csv('/home/juliavictor/my-first-blog/recommend.csv', encoding='utf-8', index=False)
+    recs.to_csv('recommend.csv', encoding='utf-8', index=False)
+    #cats.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
+    cats.to_csv('categories.csv', encoding='utf-8', index=False)
 
     # For black & white filter
     request.session[pk] = 1
