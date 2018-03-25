@@ -8,9 +8,6 @@
             {% for post in posts %}
             <div class="col-sm-3">
                 <div class="thumbnail text-center item">
-                    {% if post.pk|stringformat:"s" in request.session.keys %}
-                   <!--<span class="glyphicon glyphicon-ok-circle"></span>-->
-                    {% endif %}
                     <a href="{% url 'post_detail' pk=post.pk %}" >
                     <div class="item">
                        <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
