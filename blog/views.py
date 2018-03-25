@@ -10,30 +10,12 @@ import numpy as np
 import sys
 
 def post_list(request):
-    #recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
+    # recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
     recs = pd.read_csv('recommend.csv')
     if not request.session.session_key:
         request.session.save()
 
-    #sum_values = recs.sum(axis=0).astype(str).sort_values(ascending=False)
-    #filter = sum_values.str.contains("[a-z]")
-    #sum_values = sum_values[~filter]
-
-    # print(sum_values, file=sys.stderr)
-
-    # excluding watched posts
-    #session_data = recs.loc[recs['session_id'] == request.session.session_key]
-    #if not session_data.empty:
-    #    posts = Post.objects
-    #    for post in session_data.columns[(session_data == 1).iloc[0]]:
-    #        if post != 'session_id':
-    #           posts = posts.exclude(id=post)
-    #else:
-    #    posts = Post.objects
-    #posts = Post.objects
-
     posts = form_recommendations(request)
-    # print(posts, file=sys.stderr)
 
     # 1 most popular post
     pop_post = Post.objects
@@ -51,25 +33,13 @@ def post_list(request):
     posts = [x for x in posts] + \
             [z for z in new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:1]]
 
-    # sorting by desc and only 8 first popular posts
-
-    # posts = [x for x in posts.filter(published_date__lte=timezone.now()).order_by('-views')[:6]] + \
-    #        [y for y in posts.filter(published_date__lte=timezone.now()).order_by('-published_date')[:2]]
-
-    # posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-published_date')[:8]
 
     return render(request, 'blog/post_list.html', {'posts': posts})
 
 
 def form_recommendations(request):
     # form list of 6 categories
-    #recs = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
     recs = pd.read_csv('categories.csv')
-
-    # print("post_detail key", file=sys.stderr)
-
-    # By default
-    # posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')[:6]
 
     if not request.session.session_key:
         request.session.save()
@@ -85,7 +55,6 @@ def form_recommendations(request):
         posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')[:6]
 
     else:
-        #[recs['session_id'] == request.session.session_key]
         session_data = recs.loc[recs['session_id'] == request.session.session_key]
         session_data = session_data.drop(['session_id'], axis=1)
 
@@ -105,7 +74,6 @@ def form_recommendations(request):
     for post in posts:
         recs.ix[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
 
-    #recs.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
     recs.to_csv('categories.csv', encoding='utf-8', index=False)
 
     return posts
@@ -115,14 +83,10 @@ def form_recommendations(request):
 
 def post_detail(request, pk):
     # After post view we change the table for collaborative filtering
-    #recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
     recs = pd.read_csv('recommend.csv')
-    #cats = pd.read_csv('/home/juliavictor/my-first-blog/categories.csv')
     cats = pd.read_csv('categories.csv')
 
-    # print("post_detail key", file=sys.stderr)
     # Fix for none session_key
-
     if not request.session.session_key:
         request.session.save()
 
@@ -139,15 +103,12 @@ def post_detail(request, pk):
 
     cats.ix[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
 
-    #recs.to_csv('/home/juliavictor/my-first-blog/recommend.csv', encoding='utf-8', index=False)
     recs.to_csv('recommend.csv', encoding='utf-8', index=False)
-    #cats.to_csv('/home/juliavictor/my-first-blog/categories.csv', encoding='utf-8', index=False)
     cats.to_csv('categories.csv', encoding='utf-8', index=False)
 
     # For black & white filter
     request.session[pk] = 1
     return render(request, 'blog/post_detail.html', {'post': post})
-
 
 
 @login_required
@@ -163,6 +124,7 @@ def post_new(request):
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
+
 @login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -177,10 +139,12 @@ def post_edit(request, pk):
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
 
+
 @login_required
 def post_draft_list(request):
     posts = Post.objects.filter(published_date__isnull=True).order_by('created_date')
     return render(request, 'blog/post_draft_list.html', {'posts': posts})
+
 
 @login_required
 def post_publish(request, pk):
@@ -188,11 +152,13 @@ def post_publish(request, pk):
     post.publish()
     return redirect('post_detail', pk=pk)
 
+
 @login_required
 def post_remove(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.delete()
     return redirect('post_list')
+
 
 def add_comment_to_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -214,6 +180,7 @@ def comment_approve(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.approve()
     return redirect('post_detail', pk=comment.post.pk)
+
 
 @login_required
 def comment_remove(request, pk):

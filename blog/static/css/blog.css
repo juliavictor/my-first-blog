@@ -12,7 +12,6 @@
 }
 
 
-
 .col-sm-3 a {
     font-size: 12pt;
 }
@@ -123,7 +122,6 @@ body {
     padding: 4px 4px 4px 4px;
 
 }
-
 
 #align-fix {
     text-align: left;
@@ -442,26 +440,16 @@ when on parent (thumbnail, change caption)
   *display:inline; /* ie7 fix */
   float: none;
 }
+
 .item img {
   max-width: 100%;
   -moz-transition: all 0.5s;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
 }
+
 .item:hover img {
   -moz-transform: scale(1.05);
   -webkit-transform: scale(1.05);
   transform: scale(1.051);
-}
-
-.item #desat {
-     /*filter: grayscale(100%);
-     -webkit-filter: grayscale(100%);*/
-}
-
-.glyphicon-ok-circle {
-   position: absolute;
-   top: 130px;
-   left: 4px;
-   color: black;
 }
