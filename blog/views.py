@@ -9,6 +9,20 @@ from random import shuffle
 import numpy as np
 import sys
 
+# Bug-fix function, twice excluding in order to produce sliceable set
+def random_value(posts):
+    un_posts = Post.objects
+    top_posts = Post.objects
+
+    for post in posts:
+        un_posts = un_posts.exclude(id=str(post.pk))
+
+    for post in un_posts:
+        top_posts = top_posts.exclude(id=str(post.pk))
+
+    return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:1]
+
+
 def post_list(request):
     # recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
     recs = pd.read_csv('recommend.csv')
@@ -21,18 +35,19 @@ def post_list(request):
     pop_post = Post.objects
     for post in posts:
         pop_post = pop_post.exclude(id=str(post.pk))
+    pop_post = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
 
     posts = [x for x in posts] + \
-            [y for y in pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:1]]
+            [y for y in random_value(pop_post)]
 
     # 1 newest post
     new_post = Post.objects
     for post in posts:
         new_post = new_post.exclude(id=str(post.pk))
+    new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
 
     posts = [x for x in posts] + \
-            [z for z in new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:1]]
-
+            [z for z in random_value(new_post)]
 
     return render(request, 'blog/post_list.html', {'posts': posts})
 
