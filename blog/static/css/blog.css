@@ -510,3 +510,32 @@ when on parent (thumbnail, change caption)
             -moz-border-radius: 0px;
         }
 
+/* Main page */
+
+
+.refresh{
+    text-align: right;
+    display: block;
+    color: black;
+    padding-top:35%;
+    padding-right:-10px;
+}
+
+@media (max-width:767px) {
+.refresh{
+    text-align: right;
+    color: black;
+    padding-top: 0px;
+    padding-bottom: 10px;
+    padding-right:10px;
+}
+
+.post{
+    margin-bottom: 0px;
+}
+}
+
+a:hover .refresh{
+    text-decoration: none;
+    color: black;
+}
