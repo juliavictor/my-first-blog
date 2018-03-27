@@ -4,10 +4,11 @@ from .models import Post, Comment
 from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
-import pandas as pd
 from random import shuffle
+import pandas as pd
 import numpy as np
 import sys
+import random
 
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):
@@ -21,7 +22,6 @@ def random_value(posts):
         top_posts = top_posts.exclude(id=str(post.pk))
 
     return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:1]
-
 
 def post_list(request):
     # recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
@@ -102,6 +102,7 @@ def post_detail(request, pk):
     cats = pd.read_csv('categories.csv')
 
     # Fix for none session_key
+
     if not request.session.session_key:
         request.session.save()
 
@@ -123,7 +124,13 @@ def post_detail(request, pk):
 
     # For black & white filter
     request.session[pk] = 1
-    return render(request, 'blog/post_detail.html', {'post': post})
+
+    posts = Post.objects
+    posts = posts.exclude(id=str(post.pk))
+    posts = posts.filter(tag=post.tag).order_by('?')[:3]
+
+    return render(request, 'blog/post_detail.html', {'post': post, 'posts': posts})
+
 
 
 @login_required
@@ -139,7 +146,6 @@ def post_new(request):
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
-
 @login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -154,12 +160,10 @@ def post_edit(request, pk):
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
 
-
 @login_required
 def post_draft_list(request):
     posts = Post.objects.filter(published_date__isnull=True).order_by('created_date')
     return render(request, 'blog/post_draft_list.html', {'posts': posts})
-
 
 @login_required
 def post_publish(request, pk):
@@ -167,13 +171,11 @@ def post_publish(request, pk):
     post.publish()
     return redirect('post_detail', pk=pk)
 
-
 @login_required
 def post_remove(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.delete()
     return redirect('post_list')
-
 
 def add_comment_to_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -188,14 +190,11 @@ def add_comment_to_post(request, pk):
         form = CommentForm()
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
 
-
-# noinspection PyInterpreter
 @login_required
 def comment_approve(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.approve()
     return redirect('post_detail', pk=comment.post.pk)
-
 
 @login_required
 def comment_remove(request, pk):

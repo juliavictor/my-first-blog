@@ -11,6 +11,14 @@
   width: 200px;
 }
 
+.three-rec .col-md-10 .col-md-3 img {
+  object-fit: cover;
+  object-position: center;
+  height: 145px;
+  width: 200px;
+}
+
+
 
 .col-sm-3 a {
     font-size: 12pt;
@@ -123,6 +131,26 @@ body {
 
 }
 
+@media (max-width:767px) {
+.col-sm-3 img {
+  height: 20%;
+  width: 250px;
+}
+
+.container{
+    margin-left:5px;
+    margin-right:5px;
+
+}
+.container .col-md-10 {
+    text-align: center;
+}
+
+.container .col-sm-3 {
+    text-align: center;
+}
+}
+
 #align-fix {
     text-align: left;
 }
@@ -161,7 +189,9 @@ when on parent (thumbnail, change caption)
 
 @media (max-width:767px) {
   .header-blue{
-    padding-bottom:80px;
+    margin-bottom:10px;
+    padding-left: 15px;
+    padding-right: 15px;
   }
 }
 
@@ -370,7 +400,7 @@ when on parent (thumbnail, change caption)
 @media (max-width:991px) {
   .header-blue .hero h1{
     margin-top:0;
-    margin-bottom:15px;
+    margin-bottom:0px;
     line-height:1.4;
   }
 }
@@ -425,6 +455,7 @@ when on parent (thumbnail, change caption)
   opacity:0.2;
 }
 
+
 /* Image box shadow on hover */
 .thumbnail:hover {
      box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
@@ -440,16 +471,21 @@ when on parent (thumbnail, change caption)
   *display:inline; /* ie7 fix */
   float: none;
 }
-
 .item img {
   max-width: 100%;
   -moz-transition: all 0.5s;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
 }
-
 .item:hover img {
   -moz-transform: scale(1.05);
   -webkit-transform: scale(1.05);
   transform: scale(1.051);
+}
+
+/* For 3 recommendation posts after post */
+
+.three-rec {
+    padding:0;
+    margin:0;
 }

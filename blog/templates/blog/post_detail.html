@@ -28,7 +28,29 @@
 
     </div>
     <hr>
-    <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Add comment</a>
+    <p class="detail-rec">Вам также может понравиться:</p>
+    <div class="container three-rec">
+        <div class="col-md-10">
+        <div class="row">
+            {% for post in posts %}
+            <div class="col-md-3">
+                <div class="thumbnail text-center item">
+                    {% if post.pk|stringformat:"s" in request.session.keys %}
+                    {% endif %}
+                    <a href="{% url 'post_detail' pk=post.pk %}" >
+                    <div class="item">
+                       <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
+                    </div>
+                    </a>
+                    <div id="caption"> {{ post.title }} </div>
+                </div>
+             </div>
+            {% endfor %}
+        </div>
+    </div>
+    </div>
+<hr>
+<a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Добавить комментарий</a>
     {% for comment in post.comments.all %}
         {% if user.is_authenticated or comment.approved_comment %}
         <div class="comment">
@@ -44,6 +66,8 @@
         </div>
         {% endif %}
     {% empty %}
-        <p>No comments here yet :(</p>
+        <p></p>
+        <p>Комментариев еще нет:(<p>
+        <p></p>
     {% endfor %}
 {% endblock %}
