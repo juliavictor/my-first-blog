@@ -489,3 +489,24 @@ when on parent (thumbnail, change caption)
     padding:0;
     margin:0;
 }
+
+/* Polls */
+        .user-poll-section {
+            padding-top: 0px; /*Required FOR FIXED TOP NAVBAR*/
+            background-color: #E4E4E4;
+            /*width: 60%;*/
+            padding: 0px;
+        }
+
+        /*  REQUIRED POLL DIV STYLES */
+
+        .user-poll-section .progress {
+            height: 8px;
+        }
+
+        .user-poll-section .panel {
+            border-radius: 0px;
+            -webkit-border-radius: 0px;
+            -moz-border-radius: 0px;
+        }
+
