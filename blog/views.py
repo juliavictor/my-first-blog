@@ -9,6 +9,8 @@ import pandas as pd
 import numpy as np
 import sys
 import random
+from pathlib import Path
+from django.template import RequestContext
 
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):
@@ -23,9 +25,28 @@ def random_value(posts):
 
     return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:1]
 
+
+def read_file(name):
+    filepath = Path(name)
+    if filepath.exists():
+        file = pd.read_csv(name)
+    else:
+        file = pd.read_csv('/home/juliavictor/my-first-blog/'+name)
+    return file
+
+
+def write_file(df, name):
+    filepath = Path(name)
+    if filepath.exists():
+        file = df.to_csv(name, encoding='utf-8', index=False)
+    else:
+        file = df.to_csv('/home/juliavictor/my-first-blog/'+name,
+                    encoding='utf-8', index=False)
+
+
 def post_list(request):
     # recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
-    recs = pd.read_csv('recommend.csv')
+    recs = read_file('recommend.csv')
     if not request.session.session_key:
         request.session.save()
 
@@ -54,7 +75,7 @@ def post_list(request):
 
 def form_recommendations(request):
     # form list of 6 categories
-    recs = pd.read_csv('categories.csv')
+    recs = read_file('categories.csv')
 
     if not request.session.session_key:
         request.session.save()
@@ -89,7 +110,7 @@ def form_recommendations(request):
     for post in posts:
         recs.ix[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
 
-    recs.to_csv('categories.csv', encoding='utf-8', index=False)
+    write_file(recs, 'categories.csv')
 
     return posts
 
@@ -98,11 +119,10 @@ def form_recommendations(request):
 
 def post_detail(request, pk):
     # After post view we change the table for collaborative filtering
-    recs = pd.read_csv('recommend.csv')
-    cats = pd.read_csv('categories.csv')
+    recs = read_file('recommend.csv')
+    cats = read_file('categories.csv')
 
     # Fix for none session_key
-
     if not request.session.session_key:
         request.session.save()
 
@@ -110,17 +130,51 @@ def post_detail(request, pk):
         data = pd.DataFrame({'session_id': [request.session.session_key]})
         recs = recs.append(data)
 
-    recs.ix[recs.session_id == request.session.session_key, str(pk)] = 1
+    # if no one ever viewed this post
+    if str(pk) not in recs.columns.values:
+        print(pk)
+        print(recs.columns.values)
+        print("i am here")
+        recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
+
+    # if this user never watched this post
+    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (1,0,-1):
+        print("i guess here we have NONE")
+        recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
+
+    poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
+
+    for_val = 0
+    against_val = 0
+
+    if poll_value != 0:
+        # print("This user already voted")
+        # print(recs[pk].value_counts())
+        values = recs[pk].value_counts().index.tolist()
+        counts = recs[pk].value_counts().tolist()
+        for value, count in zip(values, counts):
+            if value == 1.0:
+                for_val = count
+            if value == -1.0:
+                against_val = count
+            # print(value, count)
+
+    # fixing percentages
+    sum = for_val + against_val
+    if sum != 0:
+        for_val = int(round(for_val*100/sum))
+        against_val = int(round(against_val*100/sum))
+
     post = get_object_or_404(Post, pk=pk)
 
     # Unique views counter setting
-    post.views = recs[pk].sum()
+    post.views = recs[pk].count()
     post.save()
 
     cats.ix[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
 
-    recs.to_csv('recommend.csv', encoding='utf-8', index=False)
-    cats.to_csv('categories.csv', encoding='utf-8', index=False)
+    write_file(recs, 'recommend.csv')
+    write_file(cats, 'categories.csv')
 
     # For black & white filter
     request.session[pk] = 1
@@ -129,8 +183,32 @@ def post_detail(request, pk):
     posts = posts.exclude(id=str(post.pk))
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
-    return render(request, 'blog/post_detail.html', {'post': post, 'posts': posts})
 
+    return render(request, 'blog/post_detail.html',
+                  {'post': post, 'posts': posts, 'poll_value': poll_value,
+                   'for_val': for_val, 'against_val': against_val})
+
+
+def submit_poll(request, pk):
+    # Fix for none session_key
+    if not request.session.session_key:
+        request.session.save()
+
+    answer = request.GET.get('group-poll')
+    print("I am in submit_poll. Answer value is")
+    print(answer)
+    if (answer == "1"):
+        answer = 1
+    else:
+        answer = -1
+    # Refreshing table values
+    recs = read_file('recommend.csv')
+    recs.ix[recs.session_id == request.session.session_key, str(pk)] = answer
+    write_file(recs, 'recommend.csv')
+
+
+    # Reloading the page
+    return post_detail(request, pk)
 
 
 @login_required
