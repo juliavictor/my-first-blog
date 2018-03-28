@@ -12,16 +12,25 @@
                     <div class="item">
                        <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
                     </div>
-                    </a>
-                    <div id="caption"> {{ post.title }} </div>
+
+                    <div id="caption"> {{ post.title }} </div></a>
                 </div>
              </div>
             {% endfor %}
         </div></div></div>
     </div>
 <!--glyphicon-chevron-right glyphicon-refresh-->
-<a class="refresh" href="."><span class="glyphicon glyphicon-chevron-right"></span></a>
+<a class="refresh" href="." id="refresh"><span class="glyphicon glyphicon-refresh"></span></a>
 
 {% endblock content %}
 
+<!--
+                    <a href="{% url 'post_detail' pk=post.pk %}" >
+                    <figure class="wp-caption">
+                       <img class="demo"  src="{{ post.image.url }}"  alt="Image" />
 
+                    <figcaption class="wp-caption-text"> {{ post.title }} </figcaption>
+                    </figure>
+                        </a>
+
+-->

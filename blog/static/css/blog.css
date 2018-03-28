@@ -1,14 +1,30 @@
-.page-header {
-    background-color: #67BCDB;
-    margin-top: 0;
-    padding: 10px 10px 10px 40px;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
+
+body {
+    font-size: 12pt;
+    background-color: #F8F8F8;
+}
+
+.post-form textarea, .post-form input {
+    width: 100%;
+}
+
+/* Thumbnail images */
 
 .col-sm-3 img {
   object-fit: cover;
   object-position: center;
   height: 145px;
   width: 200px;
+}
+
+.col-sm-3 a {
+    font-size: 12pt;
 }
 
 .three-rec .col-md-10 .col-md-3 img {
@@ -18,90 +34,40 @@
   width: 200px;
 }
 
-
-
-.col-sm-3 a {
-    font-size: 12pt;
-}
-
-.page-header h1, .page-header h1 a, .page-header h1 a:visited, .page-header h1 a:active {
-    color: #ffffff;
-    font-size: 20pt;
-    font-family: 'Open Sans', sans-serif;
-}
-
-.content {
-    margin-left: 40px;
-}
-
-.date {
-    color: #828282;
-}
-
-.views {
-    color: #828282;
-    text-align: right;
-}
-
-.column {
-    float: left;
-    width: 49%;
-}
-
-.glyphicon-eye-open:before {
-  margin-right: 5px;
-}
-
-/* Clear floats after the columns */
+/* Clear floats after the columns
 .row:after {
     content: "";
     display: table;
     clear: both;
-}
+}*/
 
-.save {
-    float: right;
-}
-
-.post-form textarea, .post-form input {
-    width: 100%;
-}
-
-.top-menu, .top-menu:hover, .top-menu:visited {
-    color: #ffffff;
-    float: right;
-    font-size: 20pt;
-    margin-right: 20px;
-}
-
-.post {
-    margin-bottom: 70px;
-}
-
-.post a, .post a:visited {
-    color: #000000;
-}
-
-.comment {
-    margin: 20px 0px 20px 20px;
-}
-
-#address, body {
-    font-family: 'Roboto', sans-serif;
-}
-
-#address {
-    font-size: 16pt;
-}
-
-body {
-    font-size: 12pt;
-    background-color: #F5F5F5;
+/* Image box shadow on hover */
+.thumbnail:hover {
+     box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
 }
 
 
-#address a {
-    color: #000000;
+/* Image scaling on hover */
+.item {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  display: inline-block;
+  *display:inline; /* ie7 fix */
+  float: none;
+}
+
+.item img {
+  max-width: 100%;
+  -moz-transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+}
+
+.item:hover img {
+  -moz-transform: scale(1.05);
+  -webkit-transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Captions */
@@ -128,12 +94,97 @@ body {
     display:inline-block;
     text-decoration: none;
     padding: 4px 4px 4px 4px;
-
 }
 
+a, a:visited, a:hover {
+    color: #000000;
+}
+
+/* captions */
+.wp-caption {
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.wp-caption img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.wp-caption:after {
+    content: "";
+    position: absolute;
+    display: block;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0.6) 100%) repeat 0 0;
+    z-index: 1;
+}
+
+.wp-caption-text {
+    display: block;
+    position: absolute;
+    width: 100%;
+    color: #fff;
+    left: 0;
+    bottom: 0;
+    padding: 1em;
+    font-weight: 700;
+    z-index: 2;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+
+/* Main page refresh button */
+.refresh{
+    text-align: right;
+    display: block;
+    padding-top:35%;
+    padding-right:-10px;
+}
+
+.refresh:hover {
+    text-decoration: none;
+    color: black;
+}
+
+/* Other main page features */
+
+
+/* Post issues */
+.date {
+    color: #828282;
+}
+
+.views {
+    color: #828282;
+    text-align: right;
+}
+
+.column {
+    float: left;
+    width: 49%;
+}
+
+.glyphicon-eye-open:before {
+  margin-right: 5px;
+}
+
+.comment {
+    margin: 20px 0px 20px 0px;
+}
+
+
+/* Mobile version */
+/* Containers */
 @media (max-width:767px) {
 .col-sm-3 img {
-  height: 20%;
+  min-height: 180px;
   width: 250px;
 }
 
@@ -151,40 +202,36 @@ body {
 }
 }
 
-#align-fix {
-    text-align: left;
-}
-
-#badge {
-    margin: 5px 0px 5px 0px;
-    /* position: absolute; */
-    z-index:1;
-    font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
-    font-size: 10pt;
-    /* background: #f8f8ff;
-    color: black;*/
-    background: none;
-    color: #8b8378;
-    border: thin solid #8b8378;
-
+/* Refresh button */
+@media (max-width:767px) {
+.refresh{
+    text-align: right;
+    color: black;
+    padding-top: 0px;
+    padding-bottom: 10px;
+    padding-right:10px;
 }
 
 
-/*
-when on parent (thumbnail, change caption)
- e.g show something on the card on hover (tag or smth else)
-.thumbnail:hover #badge{
-    display: inline;
+.post{
+    margin-bottom: 0px;
+}
 }
 
 
 /* Design template (all to the next comment) */
 .header-blue{
-  background:linear-gradient(135deg, #172a74, #21a9af);
+  /*background:linear-gradient(135deg, #172a74, #21a9af);*/
+  background:linear-gradient(135deg, #a6c0fe, #f68084);
+  /*background:linear-gradient(135deg, #e0c3fc, #8ec5fc);*/
   background-color:#184e8e;
   padding-bottom:0px;
   font-family:'Source Sans Pro', sans-serif;
+}
+
+#black {
+    color: #4d3475;
+    float: right;
 }
 
 @media (max-width:767px) {
@@ -455,87 +502,11 @@ when on parent (thumbnail, change caption)
   opacity:0.2;
 }
 
+/* Template css END*/
 
-/* Image box shadow on hover */
-.thumbnail:hover {
-     box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
-}
-
-
-/* Image scaling on hover */
-.item {
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-  display: inline-block;
-  *display:inline; /* ie7 fix */
-  float: none;
-}
-.item img {
-  max-width: 100%;
-  -moz-transition: all 0.5s;
-  -webkit-transition: all 0.5s;
-  transition: all 0.5s;
-}
-.item:hover img {
-  -moz-transform: scale(1.05);
-  -webkit-transform: scale(1.05);
-  transform: scale(1.051);
-}
-
-/* For 3 recommendation posts after post */
-
-.three-rec {
-    padding:0;
-    margin:0;
-}
-
-/* Polls */
-        .user-poll-section {
-            padding-top: 0px; /*Required FOR FIXED TOP NAVBAR*/
-            background-color: #E4E4E4;
-            /*width: 60%;*/
-            padding: 0px;
-        }
-
-        /*  REQUIRED POLL DIV STYLES */
-
-        .user-poll-section .progress {
-            height: 8px;
-        }
-
-        .user-poll-section .panel {
-            border-radius: 0px;
-            -webkit-border-radius: 0px;
-            -moz-border-radius: 0px;
-        }
-
-/* Main page */
-
-
-.refresh{
-    text-align: right;
-    display: block;
-    color: black;
-    padding-top:35%;
-    padding-right:-10px;
-}
-
-@media (max-width:767px) {
-.refresh{
-    text-align: right;
-    color: black;
-    padding-top: 0px;
-    padding-bottom: 10px;
-    padding-right:10px;
-}
-
-.post{
-    margin-bottom: 0px;
-}
-}
-
-a:hover .refresh{
-    text-decoration: none;
-    color: black;
-}
+/*
+when on parent (thumbnail, change caption)
+ e.g show something on the card on hover (tag or smth else)
+.thumbnail:hover #badge{
+    display: inline;
+} */
