@@ -20,12 +20,12 @@
         {% endif %}
         <h1>{{ post.title }}</h1>
         <p><img src="{{ post.image.url }} " class="img-responsive watch-right"/></p>
-        <a href="" id="align-fix">
-            <div><span class="badge badge-light" id="badge">
+            <p><div><span class="badge badge-light" id="badge">
                 {{ post.get_tag_display }}
-            </span></div></a>
+            </span></div></p>
         <p>{{ post.text|linebreaksbr }}</p>
     </div>
+
 
     {% if poll_value == 0 %}
     <form name="myForm" action="/post/{{post.pk}}/poll/" method="get" onsubmit="">
@@ -91,8 +91,8 @@
                     <div class="item">
                        <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
                     </div>
-                    </a>
                     <div id="caption"> {{ post.title }} </div>
+                    </a>
                 </div>
              </div>
             {% endfor %}
