@@ -14,6 +14,8 @@ body {
     width: 100%;
 }
 
+
+
 /* Thumbnail images */
 
 .col-sm-3 img {
@@ -84,20 +86,44 @@ body {
     left: 0%;
     width: 100%;
     background-color: rgba(255, 255, 255, 1);
-    /* background: radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
-    background: radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
-    background: -webkit-radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));
-    background: -moz-radial-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.85));*/
+    /*background: radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));
+    background: radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));
+    background: -webkit-radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));
+    background: -moz-radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));*/
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: 10pt;
+    /*color: white;*/
     display:inline-block;
     text-decoration: none;
-    padding: 4px 4px 4px 4px;
+    padding: 4px;
 }
+
+/* polygon over image
+.item img {
+    -webkit-clip-path: polygon(0 0, 100% 0, 100% 26%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 26%, 0 100%);
+} */
+
 
 a, a:visited, a:hover {
     color: #000000;
+}
+
+/* Icons for login with Social Networks*/
+
+a:visited.btn-social-icon {
+    color: white;
+}
+
+.social-networks {
+    display: table;
+    border-spacing: 2px;
+    border-collapse: separate;
+}
+
+.btn-social-icon {
+    display: table-cell;
 }
 
 /* captions */
@@ -349,7 +375,7 @@ a, a:visited, a:hover {
   margin-top:-5px;
   box-shadow:0 4px 8px rgba(0,0,0,.1);
   background-color:#fff;
-  border-radius:2px;
+  border-radius:0px;
 }
 
 .header-blue .navbar .dropdown-menu > li > a:focus, .header-blue .navbar .dropdown-menu > li > a{
@@ -482,7 +508,6 @@ a, a:visited, a:hover {
   top:12%;
   border-radius:2px;
   left:6%;
-  border:1px solid #444;
   background-color:#aaa;
   overflow:hidden;
   background:url(../../assets/img/skyscraper.jpg);
@@ -510,3 +535,6 @@ when on parent (thumbnail, change caption)
 .thumbnail:hover #badge{
     display: inline;
 } */
+
+
+/* Login buttons*/
