@@ -28,7 +28,8 @@
 
 
     {% if poll_value == 0 %}
-    <form name="myForm" action="/post/{{post.pk}}/poll/" method="get" onsubmit="">
+    <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
+        {% csrf_token %}
     <div class="user-poll-section">
         <div class="panel panel-default">
         <div class="panel-heading">

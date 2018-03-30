@@ -132,14 +132,14 @@ def post_detail(request, pk):
 
     # if no one ever viewed this post
     if str(pk) not in recs.columns.values:
-        print(pk)
-        print(recs.columns.values)
-        print("i am here")
+        # print(pk)
+        # print(recs.columns.values)
+        # print("i am here")
         recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
 
     # if this user never watched this post
     if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (1,0,-1):
-        print("i guess here we have NONE")
+        # print("i guess here we have NONE")
         recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
 
     poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
@@ -194,9 +194,9 @@ def submit_poll(request, pk):
     if not request.session.session_key:
         request.session.save()
 
-    answer = request.GET.get('group-poll')
-    print("I am in submit_poll. Answer value is")
-    print(answer)
+    answer = request.POST.get('group-poll')
+    # print("I am in submit_poll. Answer value is")
+    # print(answer)
     if (answer == "1"):
         answer = 1
     else:
