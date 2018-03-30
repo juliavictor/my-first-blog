@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,400,500,600,700">
     <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+    <link rel="stylesheet" href="{% static 'css/social.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://vk.com/js/api/openapi.js?152" type="text/javascript"></script>
 </head>
 
 <body>
@@ -31,17 +35,18 @@
                      <input class="form-control search-field" type="search" name="search" id="search-field">
                 </div>
                 </form> -->
+                <p class="navbar-text navbar-right">
                 {% if user.is_authenticated %}
-                <p class="navbar-text navbar-right">
-                    <a class="navbar-link login" href="{% url 'post_new' %}">Добавить пост</a>
-                    <a class="btn btn-default action-button" role="button" href="{% url 'logout' %}">Выйти</a>
-                </p>
+                    Hello, {{ user.username }}!
+                    <a class="btn btn-default action-button" role="button" href="{% url 'logout' %}">
+                        <span class="glyphicon glyphicon-log-out"></span>
+                        Выйти</a>
                 {% else %}
-                <p class="navbar-text navbar-right">
-                    <!-- здесь может быть ссылка на регистрацию-->
-                    <a class="btn btn-default action-button" role="button" href="{% url 'login' %}">Войти</a>
-                </p>
+                    <a class="btn btn-default action-button" role="button" href="{% url 'login' %}">
+                        <span class="glyphicon glyphicon-user"></span>
+                        Войти</a>
                 {% endif %}
+                </p>
             </div>
        </div>
         </nav></div>

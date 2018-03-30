@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'blog',
+    'social_django', # <--
 ]
 
 MIDDLEWARE = [
@@ -47,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware', # <--
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -62,12 +64,42 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # <--
+                'social_django.context_processors.login_redirect',  # <--
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
+
+AUTHENTICATION_BACKENDS = (
+    # 'social_core.backends.github.GithubOAuth2',
+    'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.vk.VKOAuth2',
+    'social_core.backends.google.GoogleOpenId',
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.odnoklassniki.OdnoklassnikiOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_TWITTER_KEY = 'hrmQprTyhsytpQJtCbCeG7qnJ'
+SOCIAL_AUTH_TWITTER_SECRET = 'kirMd8VvE5DF3Gc8r4mmD67no3YNn9Cilkbdlps9KLI3G9UuoD'
+
+SOCIAL_AUTH_FACEBOOK_KEY = '949463291895207'  # App ID
+SOCIAL_AUTH_FACEBOOK_SECRET = '78d3a81b22b67922018a1c9544ecd3fa'  # App Secret
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '6429422'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'Gz7QUw5Geybe0tv9zzzo'
+SOCIAL_AUTH_LOGIN_URL = '/app/oauth2login'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY ='585191437124-gdf3ntom9pg9n84ehhp8t2b4esbg5668'  #Paste CLient Key
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'V7YAVlfREYVyQ7I0NwIMuOdW' #Paste Secret Key
+
+SOCIAL_AUTH_ODNOKLASSNIKI_OAUTH2_KEY = '1264920320'
+SOCIAL_AUTH_ODNOKLASSNIKI_OAUTH2_SECRET = '71ED741FB49931BF36367332'
+SOCIAL_AUTH_ODNOKLASSNIKI_OAUTH2_PUBLIC_NAME = 'CBAICGGMEBABABABA'
 
 
 # Database
