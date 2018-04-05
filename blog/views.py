@@ -134,32 +134,55 @@ def post_detail(request, pk):
         recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
 
     # if this user never watched this post
-    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (2,1,0,-1,-2):
+    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (0,1,2,3,4,5):
         recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
 
     # Plotting results
     poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
 
-    for_val = 0
-    against_val = 0
+    # for_val = 0
+    # against_val = 0
+    #
+    # if poll_value != 0:
+    #     # print("This user already voted")
+    #     # print(recs[pk].value_counts())
+    #     values = recs[pk].value_counts().index.tolist()
+    #     counts = recs[pk].value_counts().tolist()
+    #     for value, count in zip(values, counts):
+    #         if value == 1.0:
+    #             for_val = count
+    #         if value == -1.0:
+    #             against_val = count
+    #         # print(value, count)
+    #
+    # # fixing percentages
+    # sum = for_val + against_val
+    # if sum != 0:
+    #     for_val = int(round(for_val*100/sum))
+    #     against_val = int(round(against_val*100/sum))
+
+    array = [0, 0, 0, 0, 0]
 
     if poll_value != 0:
-        # print("This user already voted")
-        # print(recs[pk].value_counts())
+        print("This user already voted")
+        print(recs[pk].value_counts())
         values = recs[pk].value_counts().index.tolist()
         counts = recs[pk].value_counts().tolist()
         for value, count in zip(values, counts):
-            if value == 1.0:
-                for_val = count
-            if value == -1.0:
-                against_val = count
-            # print(value, count)
+            for element in range(0, 5):
+                if value == element+1:
+                    array[element] = count
+            print("array")
+            print(array)
 
-    # fixing percentages
-    sum = for_val + against_val
-    if sum != 0:
-        for_val = int(round(for_val*100/sum))
-        against_val = int(round(against_val*100/sum))
+    sum_array = sum(array)
+
+    if sum_array != 0:
+        for element in range(0, 5):
+            array[element] = int(round( array[element]*100/sum_array))
+
+
+    poll_array = (19,31,0,10,40)
 
     post = get_object_or_404(Post, pk=pk)
 
@@ -181,7 +204,7 @@ def post_detail(request, pk):
 
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'poll_value': poll_value,
-                   'for_val': for_val, 'against_val': against_val})
+                   'poll_array': array})
 
 
 def submit_poll(request, pk):
