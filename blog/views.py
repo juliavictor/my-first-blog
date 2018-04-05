@@ -11,6 +11,7 @@ import sys
 import random
 from pathlib import Path
 from django.template import RequestContext
+import pyLDAvis
 
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):
@@ -84,7 +85,7 @@ def form_recommendations(request):
     if not any(recs.session_id == request.session.session_key):
         data = pd.DataFrame({'session_id': [request.session.session_key]})
         for i in range(1,11):
-            data.ix[data.session_id == request.session.session_key, str(i)] = 10
+            data.loc[data.session_id == request.session.session_key, str(i)] = 10
         recs = recs.append(data)
 
         # show 6 most popular posts
@@ -108,13 +109,11 @@ def form_recommendations(request):
 
     # decrease tag values of shown posts by 0.1
     for post in posts:
-        recs.ix[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
+        recs.loc[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
 
     write_file(recs, 'categories.csv')
 
     return posts
-
-
 
 
 def post_detail(request, pk):
@@ -132,16 +131,13 @@ def post_detail(request, pk):
 
     # if no one ever viewed this post
     if str(pk) not in recs.columns.values:
-        # print(pk)
-        # print(recs.columns.values)
-        # print("i am here")
-        recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
+        recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
 
     # if this user never watched this post
-    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (1,0,-1):
-        # print("i guess here we have NONE")
-        recs.ix[recs.session_id == request.session.session_key, str(pk)] = 0
+    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (2,1,0,-1,-2):
+        recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
 
+    # Plotting results
     poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
 
     for_val = 0
@@ -171,7 +167,7 @@ def post_detail(request, pk):
     post.views = recs[pk].count()
     post.save()
 
-    cats.ix[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
+    cats.loc[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
 
     write_file(recs, 'recommend.csv')
     write_file(cats, 'categories.csv')
@@ -183,7 +179,6 @@ def post_detail(request, pk):
     posts = posts.exclude(id=str(post.pk))
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
-
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'poll_value': poll_value,
                    'for_val': for_val, 'against_val': against_val})
@@ -194,18 +189,14 @@ def submit_poll(request, pk):
     if not request.session.session_key:
         request.session.save()
 
-    answer = request.POST.get('group-poll')
+    answer = request.POST.get('likert')
     # print("I am in submit_poll. Answer value is")
     # print(answer)
-    if (answer == "1"):
-        answer = 1
-    else:
-        answer = -1
+
     # Refreshing table values
     recs = read_file('recommend.csv')
-    recs.ix[recs.session_id == request.session.session_key, str(pk)] = answer
+    recs.loc[recs.session_id == request.session.session_key, str(pk)] = answer
     write_file(recs, 'recommend.csv')
-
 
     # Reloading the page
     return post_detail(request, pk)

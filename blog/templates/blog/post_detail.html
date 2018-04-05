@@ -27,6 +27,65 @@
     </div>
 
 
+<br>
+<!--  <h1 class="likert-header panel-hading">Опрос</h1> -->
+<div class="wrap panel panel-default">
+  <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
+        {% csrf_token %}
+    <label class="statement">Согласны ли вы с утверждением 1?</label>
+    <ul class='likert'>
+      <li>
+        <input type="radio" name="likert" value="2">
+        <label>Совершенно согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="1">
+        <label>Согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="0">
+        <label>Отношусь нейтрально</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="-1">
+        <label>Не согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="-2">
+        <label>Абсолютно не согласен</label>
+      </li>
+    </ul>
+    <!--<label class="statement">Согласны ли вы с утверждением 2?</label>
+        <ul class='likert'>
+      <li>
+        <input type="radio" name="likert" value="2">
+        <label>Совершенно согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="1">
+        <label>Согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="0">
+        <label>Отношусь нейтрально</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="-1">
+        <label>Не согласен</label>
+      </li>
+      <li>
+        <input type="radio" name="likert" value="-2">
+        <label>Абсолютно не согласен</label>
+      </li>
+    </ul>-->
+    <div class="buttons">
+      <button class="clear">Очистить</button>
+      <button class="submit">Проголосовать</button>
+    </div>
+  </form>
+</div>
+
+    <!--
     {% if poll_value == 0 %}
     <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
         {% csrf_token %}
@@ -43,9 +102,6 @@
             <label><input type="radio" name="group-poll" value="0">Против</label>
         </div>
         <div class="panel-footer">
-            <!--<a href="{% url 'submit_poll' pk=post.pk%}"
-               class="btn btn-success btn-sm">
-                </span> Проголосовать</a>-->
             <input type="submit" value="Проголосовать" class="btn btn-success btn-sm">
         </div> </div> </div>
     </div>
@@ -75,7 +131,7 @@
     </div></div>
     </div>
 
-    {% endif %}
+    {% endif %} -->
 
 
     <hr>
