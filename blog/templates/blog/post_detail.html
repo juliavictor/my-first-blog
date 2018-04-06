@@ -2,28 +2,26 @@
 
 {% block content %}
     <div class="post">
-        {% if post.published_date %}
         <div class="row date">
-            <div class="column">{{ post.published_date }}</div>
-            <div class="column views">
-                <span class="glyphicon glyphicon-eye-open" aria-hidden="true">{{ post.views|stringformat:"i" }}
+            <div class="column">
+                <div><span class="badge" id="badge">
+                {{ post.get_tag_display }}
+                </span></div>
+            </div>
+            <div class="views">
+                <span class="glyphicon glyphicon-eye-open"
+                      aria-hidden="true">{{ post.views|stringformat:"i" }}
                 </span>
             </div>
         </div>
 
-        {% else %}
-            <a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Publish</a>
-        {% endif %}
-        {% if user.is_authenticated %}
-            <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}"><span class="glyphicon glyphicon-pencil"></span></a>
-            <a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
-        {% endif %}
+
         <h1>{{ post.title }}</h1>
-        <p><img src="{{ post.image.url }} " class="img-responsive watch-right"/></p>
-            <p><div><span class="badge badge-light" id="badge">
-                {{ post.get_tag_display }}
-            </span></div></p>
-        <p>{{ post.text|linebreaksbr }}</p>
+        <p><img src="{{ post.image.url }} " class="img-responsive watch-right"/>
+        <div class="descript">{{ post.text}}</div>
+        </p>
+
+        <!--<p>{{ post.text|linebreaksbr }}</p>-->
     </div>
 
 
@@ -33,7 +31,7 @@
 <div class="wrap panel panel-default">
   <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
         {% csrf_token %}
-    <label class="statement">Согласны ли вы с утверждением 1?</label>
+    <label class="statement">Согласны ли вы с утверждением в названии?</label>
     <ul class='likert'>
       <li>
         <input type="radio" name="likert" value="5">
@@ -69,7 +67,7 @@
 
 <div class="wrap panel panel-default">
 <form action="">
-  <label class="statement">Результаты голосования</label>
+  <label class="statement panel-header">Результаты голосования</label>
   <div class="graph">
 
 <div class="progress vertical">
@@ -77,30 +75,37 @@
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.4 }}%">
   </div>
 </div>
+<label> Совершенно согласен ({{ poll_array.4 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar agree" role="progressbar" aria-valuenow="{{ poll_array.3 }}"
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.3 }}%">
   </div>
 </div>
+      <label> Согласен ({{ poll_array.3 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar neutral" role="progressbar" aria-valuenow="{{ poll_array.2 }}"
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.2 }}%">
   </div>
 </div>
+      <label> Отношусь нейтрально ({{ poll_array.2 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar disagree" role="progressbar" aria-valuenow="{{ poll_array.1 }}"
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.1 }}%">
   </div>
 </div>
+      <label> Не согласен ({{ poll_array.1 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar abs-disagree" role="progressbar" aria-valuenow="{{poll_array.0}}"
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.0 }}%">
   </div>
-</div></div>
+</div>
+        <label> Абсолютно не согласен ({{ poll_array.0 }}%) </label>
+
+  </div>
 
 <div class="names-list">
 <div class="list"> Совершенно согласен ({{ poll_array.4 }}%) </div>
@@ -164,22 +169,3 @@ Not debugged yet
     {% endfor %}-->
 {% endblock %}
 
-<!-- Stacked
-<div class="progress">
-  <div class="progress-bar abs-agree" role="progressbar" style="width:20%">
-      <label>Совершенно согласен</label>
-  </div>
-  <div class="progress-bar agree" role="progressbar" style="width:20%">
-    <label>Согласен</label>
-  </div>
-  <div class="progress-bar neutral" role="progressbar" style="width:20%">
-    <label>Нейтрален</label>
-  </div>
-  <div class="progress-bar disagree" role="progressbar" style="width:20%">
-    <label>Не согласен</label>
-  </div>
-  <div class="progress-bar abs-disagree" role="progressbar" style="width:20%">
-    <label>Абсолютно не согласен</label>
-  </div>
-</div>
--->
