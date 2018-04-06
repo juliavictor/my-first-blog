@@ -185,11 +185,17 @@ a:visited.btn-social-icon {
 /* Post issues */
 .date {
     color: #828282;
+    margin-left: 2px;
+}
+
+img.img-responsive.watch-right {
+    width: 100%;
 }
 
 .views {
     color: #828282;
-    text-align: right;
+    float: right;
+    margin-right: 2%;
 }
 
 .column {
@@ -203,6 +209,16 @@ a:visited.btn-social-icon {
 
 .comment {
     margin: 20px 0px 20px 0px;
+}
+
+div .descript {
+    float: right;
+    font-style: italic;
+    font-size: 11pt;
+}
+
+div .post {
+    padding-bottom: 5%;
 }
 
 
@@ -666,7 +682,7 @@ form .likert li label {
 form .buttons {
   margin:0px;
   padding-bottom: 10px;
-  text-align:right
+  text-align:right;
 }
 
 }
@@ -689,7 +705,9 @@ height: 35px;
 
 }
 
-/* some other stuff*/
+.graph label {
+  display: none;
+}
 
 .graph {
   margin-top: 40px;
@@ -719,4 +737,43 @@ div .list{
   margin-bottom: 10px;
   font-size: 11pt;
 
+}
+
+
+@media (max-width:1001px) {
+.vertical {
+  display: block;
+  width: 97%;
+  margin: 5px;
+  height: 10px;
+  -webkit-transform: none; /* Chrome, Safari, Opera */
+  transform: none;
+}
+
+.progress-bar {
+  padding-bottom: 55px;
+}
+
+.graph label {
+  display: inline-block;
+  font-weight: normal;
+  left: 8%;
+  font-size: 12pt;
+  margin-top:-5px;
+  margin-bottom: 5px;
+  margin-left:4%;
+}
+
+div .names-list {
+  display: none;
+}
+
+.graph {
+  padding-top:0px;
+  margin-top:0px;
+}
+
+form .statement {
+  font-weight: bold;
+}
 }

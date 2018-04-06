@@ -140,40 +140,19 @@ def post_detail(request, pk):
     # Plotting results
     poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
 
-    # for_val = 0
-    # against_val = 0
-    #
-    # if poll_value != 0:
-    #     # print("This user already voted")
-    #     # print(recs[pk].value_counts())
-    #     values = recs[pk].value_counts().index.tolist()
-    #     counts = recs[pk].value_counts().tolist()
-    #     for value, count in zip(values, counts):
-    #         if value == 1.0:
-    #             for_val = count
-    #         if value == -1.0:
-    #             against_val = count
-    #         # print(value, count)
-    #
-    # # fixing percentages
-    # sum = for_val + against_val
-    # if sum != 0:
-    #     for_val = int(round(for_val*100/sum))
-    #     against_val = int(round(against_val*100/sum))
-
     array = [0, 0, 0, 0, 0]
 
     if poll_value != 0:
-        print("This user already voted")
-        print(recs[pk].value_counts())
+        # print("This user already voted")
+        # print(recs[pk].value_counts())
         values = recs[pk].value_counts().index.tolist()
         counts = recs[pk].value_counts().tolist()
         for value, count in zip(values, counts):
             for element in range(0, 5):
                 if value == element+1:
                     array[element] = count
-            print("array")
-            print(array)
+            # print("array")
+            # print(array)
 
     sum_array = sum(array)
 
