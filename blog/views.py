@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post, Comment
+from .models import Post, Comment, Poll
 from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
@@ -120,14 +120,18 @@ def post_detail(request, pk):
     # After post view we change the table for collaborative filtering
     recs = read_file('recommend.csv')
     cats = read_file('categories.csv')
+    polls = read_file('polls.csv')
+
+    post = get_object_or_404(Post, pk=pk)
 
     # Fix for none session_key
     if not request.session.session_key:
         request.session.save()
 
-    if not any(recs.session_id == request.session.session_key):
+    if not any(polls.session_id == request.session.session_key):
         data = pd.DataFrame({'session_id': [request.session.session_key]})
         recs = recs.append(data)
+        polls = polls.append(data)
 
     # if no one ever viewed this post
     if str(pk) not in recs.columns.values:
@@ -138,32 +142,48 @@ def post_detail(request, pk):
         recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
 
     # Plotting results
-    poll_value = recs.loc[recs.session_id == request.session.session_key, str(pk)].item()
+    # In loop getting results of all polls
 
-    array = [0, 0, 0, 0, 0]
+    results = []
+    poll_value = 0
 
-    if poll_value != 0:
-        # print("This user already voted")
-        # print(recs[pk].value_counts())
-        values = recs[pk].value_counts().index.tolist()
-        counts = recs[pk].value_counts().tolist()
-        for value, count in zip(values, counts):
-            for element in range(0, 5):
-                if value == element+1:
-                    array[element] = count
-            # print("array")
-            # print(array)
+    for poll in post.polls.all():
+        poll_value = polls.loc[polls.session_id == request.session.session_key,
+                               str(poll.id)].item()
+        array = [0, 0, 0, 0, 0]
 
-    sum_array = sum(array)
+        if poll_value > 0:
+            # print("This user already voted")
+            values = polls[str(poll.id)].value_counts().index.tolist()
+            counts = polls[str(poll.id)].value_counts().tolist()
+            for value, count in zip(values, counts):
+                for element in range(0, 5):
+                    if value == element+1:
+                        array[element] = count
 
-    if sum_array != 0:
-        for element in range(0, 5):
-            array[element] = int(round( array[element]*100/sum_array))
+            sum_array = sum(array)
+            if sum_array != 0:
+                for element in range(0, 5):
+                    array[element] = int(round(array[element]*100/sum_array))
+
+            print("array")
+            print(array)
+            array.append(poll.question)
+            results.append(array)
+
+        else:
+            poll_value = 0
+            # print("This user never voted")
+            break
+
+
+    print("results")
+    print(results)
 
 
     poll_array = (19,31,0,10,40)
 
-    post = get_object_or_404(Post, pk=pk)
+
 
     # Unique views counter setting
     post.views = recs[pk].count()
@@ -173,6 +193,7 @@ def post_detail(request, pk):
 
     write_file(recs, 'recommend.csv')
     write_file(cats, 'categories.csv')
+    write_file(polls, 'polls.csv')
 
     # For black & white filter
     request.session[pk] = 1
@@ -183,7 +204,7 @@ def post_detail(request, pk):
 
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'poll_value': poll_value,
-                   'poll_array': array})
+                   'poll_arrays': results})
 
 
 def submit_poll(request, pk):
@@ -191,14 +212,16 @@ def submit_poll(request, pk):
     if not request.session.session_key:
         request.session.save()
 
-    answer = request.POST.get('likert')
-    # print("I am in submit_poll. Answer value is")
-    # print(answer)
+    post = get_object_or_404(Post, pk=pk)
+    polls = read_file('polls.csv')
 
-    # Refreshing table values
-    recs = read_file('recommend.csv')
-    recs.loc[recs.session_id == request.session.session_key, str(pk)] = answer
-    write_file(recs, 'recommend.csv')
+    for poll in post.polls.all():
+        answer = request.POST.get('likert'+str(poll.id))
+        # print("I am in submit_poll. Answer value is")
+        # print(answer)
+        polls.loc[polls.session_id == request.session.session_key, str(poll.id)] = answer
+
+    write_file(polls, 'polls.csv')
 
     # Reloading the page
     return post_detail(request, pk)

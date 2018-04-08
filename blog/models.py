@@ -58,3 +58,10 @@ class Comment(models.Model):
     def __str__(self):
         return self.text
 
+
+class Poll(models.Model):
+    post = models.ForeignKey('blog.Post', related_name='polls')
+    question = models.TextField()
+
+    def __str__(self):
+        return self.question
