@@ -11,7 +11,7 @@ import sys
 import random
 from pathlib import Path
 from django.template import RequestContext
-import pyLDAvis
+
 
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):

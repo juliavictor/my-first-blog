@@ -21,6 +21,7 @@ STATUS_CHOICES = (
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
+    img_source = models.TextField()
     text = models.TextField()
     tag = models.IntegerField(choices=STATUS_CHOICES, default=1)
     views = models.PositiveIntegerField(validators=[MinValueValidator(1)], default = 0)
