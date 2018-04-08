@@ -23,50 +23,54 @@
         <!--<p>{{ post.text|linebreaksbr }}</p>-->
     </div>
 
-
 <br>
+
 {% if poll_value == 0 %}
-<!--  <h1 class="likert-header panel-hading">Опрос</h1> -->
+{% if post.polls.all %}
 <div class="wrap panel panel-default">
-  <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
+      <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
+{% for poll in post.polls.all %}
         {% csrf_token %}
-    <label class="statement">Согласны ли вы с утверждением в названии?</label>
+    <label class="statement">{{ poll.question }}</label>
     <ul class='likert'>
       <li>
-        <input type="radio" name="likert" value="5">
+        <input type="radio" name="likert{{ poll.id }}" value="5">
         <label>Совершенно согласен</label>
       </li>
       <li>
-        <input type="radio" name="likert" value="4">
-        <label>Согласен</label>
+        <input type="radio" name="likert{{ poll.id }}" value="4">
+        <label>Скорее не согласен</label>
       </li>
       <li>
-        <input type="radio" name="likert" value="3">
+        <input type="radio" name="likert{{ poll.id }}" value="3" checked>
         <label>Отношусь нейтрально</label>
       </li>
       <li>
-        <input type="radio" name="likert" value="2">
-        <label>Не согласен</label>
+        <input type="radio" name="likert{{ poll.id }}" value="2">
+        <label>Скорее не согласен</label>
       </li>
       <li>
-        <input type="radio" name="likert" value="1">
+        <input type="radio" name="likert{{ poll.id }}" value="1">
         <label>Абсолютно не согласен</label>
       </li>
     </ul>
-    <!-- Another statement will be here
-    <label ...
-    </ul>-->
+
+{% endfor %}
     <div class="buttons">
       <button class="clear">Очистить</button>
       <button class="submit">Проголосовать</button>
     </div>
   </form>
 </div>
+{% endif %}
+
 {% else %}
 
 <div class="wrap panel panel-default">
-<form action="">
-  <label class="statement panel-header">Результаты голосования</label>
+   Результаты голосования:
+   {% for poll_array in poll_arrays %}
+  <form action="">
+  <label class="statement ">{{poll_array.5}}</label>
   <div class="graph">
 
 <div class="progress vertical">
@@ -81,7 +85,7 @@
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.3 }}%">
   </div>
 </div>
-      <label> Согласен ({{ poll_array.3 }}%) </label>
+      <label> Скорее согласен ({{ poll_array.3 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar neutral" role="progressbar" aria-valuenow="{{ poll_array.2 }}"
@@ -95,7 +99,7 @@
   aria-valuemin="0" aria-valuemax="100" style="width:{{ poll_array.1 }}%">
   </div>
 </div>
-      <label> Не согласен ({{ poll_array.1 }}%) </label>
+      <label> Скорее не согласен ({{ poll_array.1 }}%) </label>
 
 <div class="progress vertical">
   <div class="progress-bar abs-disagree" role="progressbar" aria-valuenow="{{poll_array.0}}"
@@ -103,21 +107,22 @@
   </div>
 </div>
         <label> Абсолютно не согласен ({{ poll_array.0 }}%) </label>
-
   </div>
 
 <div class="names-list">
 <div class="list"> Совершенно согласен ({{ poll_array.4 }}%) </div>
-<div class="list"> Согласен ({{ poll_array.3 }}%) </div>
+<div class="list"> Скорее согласен ({{ poll_array.3 }}%) </div>
 <div class="list"> Отношусь нейтрально ({{ poll_array.2 }}%)</div>
-<div class="list"> Не согласен ({{ poll_array.1 }}%)</div>
+<div class="list"> Скорее не согласен ({{ poll_array.1 }}%)</div>
 <div class="list"> Абсолютно не согласен ({{ poll_array.0 }}%)</div>
 </div>
+  </form>
+{% endfor %}
 
-</form>
 </div>
 
 {% endif %}
+
 
     <hr>
     <p class="detail-rec">Вам также может понравиться:</p>
