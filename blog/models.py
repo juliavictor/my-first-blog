@@ -18,6 +18,10 @@ STATUS_CHOICES = (
     (10, ("Медицина и здоровье"))
 )
 
+FA_CHOICES = (
+    (0, ("Против")),
+    (1, ("За")))
+
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
@@ -62,6 +66,7 @@ class Comment(models.Model):
 class Poll(models.Model):
     post = models.ForeignKey('blog.Post', related_name='polls')
     question = models.TextField()
+    polarity = models.IntegerField(choices=FA_CHOICES, default=1)
 
     def __str__(self):
         return self.question

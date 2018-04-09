@@ -29,12 +29,14 @@
 {% if post.polls.all %}
 <div class="wrap panel panel-default">
       <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
+<!-- {% load shuffle %} -->
 {% for poll in post.polls.all %}
         {% csrf_token %}
     <label class="statement">{{ poll.question }}</label>
     <ul class='likert'>
       <li>
-        <input type="radio" name="likert{{ poll.id }}" value="5">
+          <!-- onclick="this.form.submit()" -->
+        <input type="radio" name="likert{{ poll.id }}" value="5" >
         <label>Совершенно согласен</label>
       </li>
       <li>
@@ -57,7 +59,7 @@
 
 {% endfor %}
     <div class="buttons">
-      <button class="clear">Очистить</button>
+      <!--<button class="clear">Очистить</button>-->
       <button class="submit">Проголосовать</button>
     </div>
   </form>
@@ -65,12 +67,16 @@
 {% endif %}
 
 {% else %}
+<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script> zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+		ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9","ee6b7db5b51705a13dc2339db3edaf6d"];</script>
 
-<div class="wrap panel panel-default">
-   Результаты голосования:
+<!--<div class="wrap panel panel-default">
+    <div id="results">Результаты голосования:</div>
    {% for poll_array in poll_arrays %}
   <form action="">
-  <label class="statement ">{{poll_array.5}}</label>
+  <label class="statement">
+      {{poll_array.5}}</label>
   <div class="graph">
 
 <div class="progress vertical">
@@ -117,6 +123,51 @@
 <div class="list"> Абсолютно не согласен ({{ poll_array.0 }}%)</div>
 </div>
   </form>
+
+
+{% endfor %}
+
+</div>-->
+<div class="wrap panel panel-default">
+    <div id="results">Результаты голосования:</div>
+{% for js_poll in js_results %}
+<div id="myChart{{js_poll.5}}"></div>
+<script>
+var myConfig = {
+  "type": "area",
+  "scale-x":{
+    "labels":["Совершенно\nсогласен","Скорее\nсогласен",
+    "Отношусь\nнейтрально","Скорее\nне согласен","Абсолютно\nне согласен"],
+    "step":"1",
+  },
+  "plot":{
+    "aspect":"spline"
+  },
+  "title": {
+    "text":"{{ js_poll.6 }}",
+    "font-size": 15,
+    "bold":false,
+    "italic":true,
+    "text-align": "left",
+    "wrap-text":true,
+    "width":"95%",
+    "x":"4%",
+        },
+  "series": [
+    {
+      "values": {{ js_poll|slice:"5" }}
+    }
+  ]
+};
+
+zingchart.render({
+	id : 'myChart{{ js_poll.5 }}',
+	data : myConfig,
+	height: 250,
+	width: "100%"
+});
+</script>
+
 {% endfor %}
 
 </div>

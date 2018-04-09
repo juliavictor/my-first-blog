@@ -144,8 +144,10 @@ def post_detail(request, pk):
     # Plotting results
     # In loop getting results of all polls
 
-    results = []
+    js_results = []
     poll_value = 0
+    # !! const_value for graph visualisation
+    const = 1
 
     for poll in post.polls.all():
         poll_value = polls.loc[polls.session_id == request.session.session_key,
@@ -161,29 +163,25 @@ def post_detail(request, pk):
                     if value == element+1:
                         array[element] = count
 
+            # Adding constant to every value
+            array = [x + const for x in array]
+
+            # Counting percentages
             sum_array = sum(array)
             if sum_array != 0:
                 for element in range(0, 5):
                     array[element] = int(round(array[element]*100/sum_array))
 
-            print("array")
-            print(array)
+            # Completing the final array
+            array = list(reversed(array))
+            array.append(poll.id)
             array.append(poll.question)
-            results.append(array)
+            js_results.append(array)
 
         else:
             poll_value = 0
             # print("This user never voted")
             break
-
-
-    print("results")
-    print(results)
-
-
-    poll_array = (19,31,0,10,40)
-
-
 
     # Unique views counter setting
     post.views = recs[pk].count()
@@ -202,9 +200,11 @@ def post_detail(request, pk):
     posts = posts.exclude(id=str(post.pk))
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
+    # polls = random.shuffle([i for i in post.polls.all()])
+
     return render(request, 'blog/post_detail.html',
-                  {'post': post, 'posts': posts, 'poll_value': poll_value,
-                   'poll_arrays': results})
+                  {'post': post, 'posts': posts, 'js_results': js_results,
+                   'poll_value': poll_value})
 
 
 def submit_poll(request, pk):
