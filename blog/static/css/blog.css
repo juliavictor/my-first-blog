@@ -783,3 +783,17 @@ form .statement {
   padding-left: 10px;
 }
 }
+
+/* User statistic page */
+table {
+  background: white;
+  font-size: 11pt;
+  display: none;
+  color: black;
+}
+
+table a:hover {
+  text-decoration: none;
+  color: #a6c0fe;
+}
+
