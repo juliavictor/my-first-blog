@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <script src="https://vk.com/js/api/openapi.js?152" type="text/javascript"></script>
+
 </head>
 
 <body>
@@ -37,7 +38,10 @@
                 </form> -->
                 <p class="navbar-text navbar-right">
                 {% if user.is_authenticated %}
-                    Hello, {{ user.username }}!
+                    <!--Hello, {{ user.username }}!-->
+                     <a class="btn btn-default action-button" role="button" href="{% url 'show_user_profile' %}">
+                        <span class="glyphicon glyphicon-user"></span>
+                         Профиль</a>
                     <a class="btn btn-default action-button" role="button" href="{% url 'logout' %}">
                         <span class="glyphicon glyphicon-log-out"></span>
                         Выйти</a>

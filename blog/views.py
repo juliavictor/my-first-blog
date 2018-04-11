@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import random
 from pathlib import Path
+
 from django.template import RequestContext
 
 
@@ -225,6 +226,36 @@ def submit_poll(request, pk):
 
     # Reloading the page
     return post_detail(request, pk)
+
+
+def isNaN(num):
+    return num != num
+
+
+@login_required
+def show_user_profile(request):
+    # Fix for none session_key
+    if not request.session.session_key:
+        request.session.save()
+
+    # Getting all polls this user voted
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+    polls = read_file('polls.csv')
+    poll_texts = []
+    cmap = {1: 'Абсолютно не согласен', 2: 'Скорее не согласен',
+            3: 'Отношусь нейтрально', 4: 'Скорее согласен',
+            5: 'Совершенно согласен'}
+
+    for post in posts:
+        for poll in post.polls.all():
+            if not polls.loc[polls.session_id == request.session.session_key].empty:
+                value = polls.loc[polls.session_id == request.session.session_key,
+                              str(poll.id)].item()
+                if not isNaN(value):
+                    value = cmap[value]
+                    poll_texts.append((poll, value))
+
+    return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts})
 
 
 @login_required
