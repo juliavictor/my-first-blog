@@ -72,7 +72,25 @@ def post_list(request):
     posts = [x for x in posts] + \
             [z for z in random_value(new_post)]
 
+    # # For debug
+    # if request.user.is_authenticated():
+    #     print(request.user)
+    #     print(request.user.id)
+    #     print(request.user.first_name)
+    #     print(request.user.last_name)
+    # else:
+    #     print(request.session.session_key)
+
+
     return render(request, 'blog/post_list.html', {'posts': posts})
+
+
+def get_user_key(request):
+    if request.user.is_authenticated():
+        user_key = request.user.id
+    else:
+        user_key = request.session.session_key
+    return str(user_key)
 
 
 def form_recommendations(request):
@@ -82,18 +100,20 @@ def form_recommendations(request):
     if not request.session.session_key:
         request.session.save()
 
+    user_key = get_user_key(request)
+
     # if user is new, fill all categories with 10
-    if not any(recs.session_id == request.session.session_key):
-        data = pd.DataFrame({'session_id': [request.session.session_key]})
+    if not any(recs.session_id == user_key):
+        data = pd.DataFrame({'session_id': [user_key]})
         for i in range(1,11):
-            data.loc[data.session_id == request.session.session_key, str(i)] = 10
+            data.loc[data.session_id == user_key, str(i)] = 10
         recs = recs.append(data)
 
         # show 6 most popular posts
         posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')[:6]
 
     else:
-        session_data = recs.loc[recs['session_id'] == request.session.session_key]
+        session_data = recs.loc[recs['session_id'] == user_key]
         session_data = session_data.drop(['session_id'], axis=1)
 
         # sorting categories list by descending order
@@ -110,7 +130,7 @@ def form_recommendations(request):
 
     # decrease tag values of shown posts by 0.1
     for post in posts:
-        recs.loc[recs.session_id == request.session.session_key, str(post.tag)] -= 0.1
+        recs.loc[recs.session_id == user_key, str(post.tag)] -= 0.1
 
     write_file(recs, 'categories.csv')
 
@@ -129,18 +149,21 @@ def post_detail(request, pk):
     if not request.session.session_key:
         request.session.save()
 
-    if not any(polls.session_id == request.session.session_key):
-        data = pd.DataFrame({'session_id': [request.session.session_key]})
+    user_key = get_user_key(request)
+
+    if not any(polls.session_id == user_key):
+        print("not any(polls.session_id == user_key)")
+        data = pd.DataFrame({'session_id': [user_key]})
         recs = recs.append(data)
         polls = polls.append(data)
 
     # if no one ever viewed this post
     if str(pk) not in recs.columns.values:
-        recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
+        recs.loc[recs.session_id == user_key, str(pk)] = 0
 
     # if this user never watched this post
-    if recs.loc[recs.session_id == request.session.session_key, str(pk)].item() not in (0,1,2,3,4,5):
-        recs.loc[recs.session_id == request.session.session_key, str(pk)] = 0
+    if recs.loc[recs.session_id == user_key, str(pk)].item() not in (0,1,2,3,4,5):
+        recs.loc[recs.session_id == user_key, str(pk)] = 0
 
     # Plotting results
     # In loop getting results of all polls
@@ -151,7 +174,7 @@ def post_detail(request, pk):
     const = 1
 
     for poll in post.polls.all():
-        poll_value = polls.loc[polls.session_id == request.session.session_key,
+        poll_value = polls.loc[polls.session_id == user_key,
                                str(poll.id)].item()
         array = [0, 0, 0, 0, 0]
 
@@ -188,7 +211,7 @@ def post_detail(request, pk):
     post.views = recs[pk].count()
     post.save()
 
-    cats.loc[cats.session_id == request.session.session_key, str(post.tag)] += 0.8
+    cats.loc[cats.session_id == user_key, str(post.tag)] += 0.8
 
     write_file(recs, 'recommend.csv')
     write_file(cats, 'categories.csv')
@@ -213,6 +236,7 @@ def submit_poll(request, pk):
     if not request.session.session_key:
         request.session.save()
 
+    user_key = get_user_key(request)
     post = get_object_or_404(Post, pk=pk)
     polls = read_file('polls.csv')
 
@@ -220,7 +244,7 @@ def submit_poll(request, pk):
         answer = request.POST.get('likert'+str(poll.id))
         # print("I am in submit_poll. Answer value is")
         # print(answer)
-        polls.loc[polls.session_id == request.session.session_key, str(poll.id)] = answer
+        polls.loc[polls.session_id == user_key, str(poll.id)] = answer
 
     write_file(polls, 'polls.csv')
 
@@ -235,8 +259,11 @@ def isNaN(num):
 @login_required
 def show_user_profile(request):
     # Fix for none session_key
+
     if not request.session.session_key:
         request.session.save()
+
+    user_key = get_user_key(request)
 
     # Getting all polls this user voted
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
@@ -248,12 +275,13 @@ def show_user_profile(request):
 
     for post in posts:
         for poll in post.polls.all():
-            if not polls.loc[polls.session_id == request.session.session_key].empty:
-                value = polls.loc[polls.session_id == request.session.session_key,
+            if not polls.loc[polls.session_id == user_key].empty:
+                value = polls.loc[polls.session_id == user_key,
                               str(poll.id)].item()
                 if not isNaN(value):
                     value = cmap[value]
                     poll_texts.append((poll, value))
+
 
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts})
 
