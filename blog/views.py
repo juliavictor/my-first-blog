@@ -152,7 +152,6 @@ def post_detail(request, pk):
     user_key = get_user_key(request)
 
     if not any(polls.session_id == user_key):
-        print("not any(polls.session_id == user_key)")
         data = pd.DataFrame({'session_id': [user_key]})
         recs = recs.append(data)
         polls = polls.append(data)
