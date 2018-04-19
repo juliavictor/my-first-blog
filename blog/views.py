@@ -68,7 +68,6 @@ def post_list(request):
     for post in posts:
         new_post = new_post.exclude(id=str(post.pk))
     new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
-
     posts = [x for x in posts] + \
             [z for z in random_value(new_post)]
 
