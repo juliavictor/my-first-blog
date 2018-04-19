@@ -870,12 +870,14 @@ a:visited.btn-social-icon {
   overflow: hidden;
   min-height: 120px;
 }
+
 .quote-card p {
   font-size: 18px;
   line-height: 1.4;
   margin: 0;
   max-width: 80%;
 }
+
 .quote-card cite {
   font-size: 13px;
   margin-top: 10px;
@@ -884,6 +886,7 @@ a:visited.btn-social-icon {
   font-weight: 200;
   opacity: 0.8;
 }
+
 .quote-card:before {
   font-family: Georgia, serif;
   content: "“";
@@ -894,6 +897,7 @@ a:visited.btn-social-icon {
   color: rgba(238, 238, 238, 0.8);
   font-weight: normal;
 }
+
 .quote-card:after {
   font-family: Georgia, serif;
   content: "”";
@@ -905,12 +909,6 @@ a:visited.btn-social-icon {
   color: rgba(238, 238, 238, 0.8);
   font-weight: normal;
 }
-@media (max-width: 640px) {
-  .quote-card:after {
-    font-size: 22em;
-    right: -25px;
-  }
-}
 
 .container-quote {
   max-width: 800px;
@@ -919,4 +917,21 @@ a:visited.btn-social-icon {
 
 .text-center {
   text-align: center;
+}
+
+@media (max-width:1001px) {
+  .quote-card {
+  max-width: 100%;
+  }
+
+  .quote-card p {
+  max-width: 100%;
+  }
+
+  .quote-card cite {
+  max-width: 100%;
+  }
+  .quote-card:after {
+  content: none;
+  }
 }
