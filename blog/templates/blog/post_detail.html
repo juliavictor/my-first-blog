@@ -19,8 +19,21 @@
         <p><img src="{{ post.image.url }} " id="detail" class="img-responsive watch-right"/>
         <div class="descript">{{ post.img_source}}</div>
         </p>
+        <!-- {{ post.text|linebreaksbr }} -->
+        <p class="post-descript">
+        <div class="container-quote">
 
-        <p>{{ post.text|linebreaksbr }}</p>
+        {% for quote in post.quotes.all %}
+
+        <blockquote class="quote-card">
+        <p>{{ quote.quote }}</p>
+        <cite>{{ quote.author|linebreaksbr }}</cite>
+        </blockquote>
+
+        {% endfor %}
+
+        </div>
+        </p>
     </div>
 
 <br>
