@@ -230,22 +230,42 @@ zingchart.render({
 <!-- DO NOT DELETE!!!
 Not debugged yet-->
 
-<hr>
-    {% if user.is_authenticated%}
-        <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Добавить комментарий</a>
-    {% endif %}
-    {% for comment in post.comments.all %}
-        <div class="comment">
-            <div class="date">
-                {{ comment.created_date }}
-            </div>
-            <strong>{{ comment.author }}</strong>
-            <p>{{ comment.text|linebreaks }}</p>
-        </div>
+<div class="bootstrap snippet">
+    <div class="row">
+		<div class="col-md-12">
+		    <div class="blog-comment">
+				<div class="compar">Комментарии</div>
+                <hr/>
+				<ul class="comments">
+
+{% for comment in post.comments.all %}
+	<li class="clearfix">
+	<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">
+	<div class="post-comments">
+	 <p class="meta">{{ comment.created_date }} <a href="#">{{ comment.author }}</a>
+         написал:</p>
+         <p>
+         {{ comment.text|linebreaks }}
+         </p>
+	</div>
+	</li>
+
     {% empty %}
         <p></p>
         <p>Комментариев еще нет:(<p>
         <p></p>
     {% endfor %}
+
+    {% if user.is_authenticated%}
+       <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">
+               Добавить комментарий</a>
+    {% endif %}
+
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+
 {% endblock %}
 

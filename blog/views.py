@@ -336,7 +336,13 @@ def add_comment_to_post(request, pk):
             comment = form.save(commit=False)
             fn = request.user.first_name
             ln = request.user.last_name
-            comment.author = fn + ' ' + ln
+            if len(ln) > 0:
+                comment.author = fn + ' ' + ln
+            else:
+                if len(fn) > 0:
+                    comment.author = fn
+                else:
+                    comment.author = request.user
             comment.post = post
             comment.save()
             return redirect('post_detail', pk=post.pk)
