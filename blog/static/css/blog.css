@@ -74,6 +74,20 @@ body {
 
 /* Captions */
 
+.post-title {
+   font-weight: bold;
+   font-size: 30px;
+   line-height: 1.1;
+   margin-top: 10px;
+   margin-bottom: 15px;
+}
+
+@media (max-width:1001px) {
+.post-title {
+   font-size: 25px;
+}
+}
+
 .thumbnail {
     position: relative;
     text-align: center;
