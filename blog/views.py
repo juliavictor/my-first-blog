@@ -10,6 +10,8 @@ import numpy as np
 import sys
 import random
 from pathlib import Path
+import sqlite3
+import datetime
 
 from django.template import RequestContext
 
@@ -140,7 +142,6 @@ def post_detail(request, pk):
     # After post view we change the table for collaborative filtering
     recs = read_file('recommend.csv')
     cats = read_file('categories.csv')
-    polls = read_file('polls.csv')
 
     post = get_object_or_404(Post, pk=pk)
 
@@ -150,10 +151,14 @@ def post_detail(request, pk):
 
     user_key = get_user_key(request)
 
-    if not any(polls.session_id == user_key):
-        data = pd.DataFrame({'session_id': [user_key]})
-        recs = recs.append(data)
-        polls = polls.append(data)
+    # Connecting to database
+    con = sqlite3.connect('db.sqlite3', timeout=10)
+    cursor = con.cursor()
+
+    # if not any(polls.session_id == user_key):
+    #     data = pd.DataFrame({'session_id': [user_key]})
+    #     recs = recs.append(data)
+    #     polls = polls.append(data)
 
     # if no one ever viewed this post
     if str(pk) not in recs.columns.values:
@@ -169,17 +174,25 @@ def post_detail(request, pk):
     js_results = []
     poll_value = 0
     # !! const_value for graph visualisation
-    const = 1
+    const = 0
+
 
     for poll in post.polls.all():
-        poll_value = polls.loc[polls.session_id == user_key,
-                               str(poll.id)].item()
         array = [0, 0, 0, 0, 0]
+        post_value = pd.read_sql_query("SELECT * FROM blog_poll_values where post_id=" + pk +
+                                       " and user_id=\"" + str(user_key) + "\"", con)
 
-        if poll_value > 0:
-            # print("This user already voted")
-            values = polls[str(poll.id)].value_counts().index.tolist()
-            counts = polls[str(poll.id)].value_counts().tolist()
+        if not post_value.empty:
+            poll_value = 1
+            print("This user already voted")
+
+            post_values = pd.read_sql_query("select value, count(value) from (select user_id, "
+                  "blog_poll_id, value, max(date) as date from blog_poll_values where "
+                  "blog_poll_id="+str(poll.id)+" group by user_id) group by value", con)
+
+            values = post_values['value'].tolist()
+            counts = post_values['count(value)'].tolist()
+
             for value, count in zip(values, counts):
                 for element in range(0, 5):
                     if value == element+1:
@@ -202,8 +215,11 @@ def post_detail(request, pk):
 
         else:
             poll_value = 0
-            # print("This user never voted")
-            break
+            print("This user never voted")
+            # break
+
+    cursor.close()
+    con.close()
 
     # Unique views counter setting
     post.views = recs[pk].count()
@@ -213,7 +229,6 @@ def post_detail(request, pk):
 
     write_file(recs, 'recommend.csv')
     write_file(cats, 'categories.csv')
-    write_file(polls, 'polls.csv')
 
     # For black & white filter
     request.session[pk] = 1
@@ -236,15 +251,24 @@ def submit_poll(request, pk):
 
     user_key = get_user_key(request)
     post = get_object_or_404(Post, pk=pk)
-    polls = read_file('polls.csv')
+
+    # Connecting to database
+    con = sqlite3.connect('db.sqlite3')
+    cursor = con.cursor()
 
     for poll in post.polls.all():
         answer = request.POST.get('likert'+str(poll.id))
         # print("I am in submit_poll. Answer value is")
         # print(answer)
-        polls.loc[polls.session_id == user_key, str(poll.id)] = answer
+        # polls.loc[polls.session_id == user_key, str(poll.id)] = answer
 
-    write_file(polls, 'polls.csv')
+        # Adding new values
+        t = (user_key, pk, poll.id, answer, datetime.datetime.now())
+        cursor.execute('insert into blog_poll_values(user_id,post_id,blog_poll_id,value,date) values (?,?,?,?,?)', t)
+        con.commit()
+
+    cursor.close()
+    con.close()
 
     # Reloading the page
     return post_detail(request, pk)
@@ -263,9 +287,12 @@ def show_user_profile(request):
 
     user_key = get_user_key(request)
 
+    # Connecting to database
+    con = sqlite3.connect('db.sqlite3', timeout=10)
+    cursor = con.cursor()
+
     # Getting all polls this user voted
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
-    polls = read_file('polls.csv')
     poll_texts = []
     cmap = {1: 'Абсолютно не согласен', 2: 'Скорее не согласен',
             3: 'Отношусь нейтрально', 4: 'Скорее согласен',
@@ -273,13 +300,18 @@ def show_user_profile(request):
 
     for post in posts:
         for poll in post.polls.all():
-            if not polls.loc[polls.session_id == user_key].empty:
-                value = polls.loc[polls.session_id == user_key,
-                              str(poll.id)].item()
+            post_val = pd.read_sql_query("select user_id, blog_poll_id, post_id, value, "
+                  "max(date) as date from blog_poll_values where blog_poll_id="
+                  + str(poll.id) + " and user_id=\"" + str(user_key) + "\"", con)
+
+            if post_val['value'][0] is not None:
+                value = post_val['value'][0]
                 if not isNaN(value):
                     value = cmap[value]
                     poll_texts.append((poll, value))
 
+    cursor.close()
+    con.close()
 
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts})
 
