@@ -297,7 +297,7 @@ div .post {
   box-shadow:none;
   border:none;
 }
-
+/*
 @media (max-width:767px) {
   .header-blue .navbar{
     padding-top:0;
@@ -316,7 +316,7 @@ div .post {
   .header-blue .navbar .navbar-right{
     margin-bottom:20px;
   }
-}
+}*/
 
 .header-blue .navbar .navbar-brand{
   font-weight:bold;
@@ -415,7 +415,7 @@ div .post {
     color:#fff;
   }
 }
-
+/*
 @media (max-width:767px) {
   .header-blue .navbar .navbar-nav .open .dropdown-menu > li > a{
     color:#fdfeff;
@@ -423,7 +423,7 @@ div .post {
     padding-bottom:12px;
     line-height:1;
   }
-}
+}*/
 
 .header-blue .action-button, .header-blue .action-button:active{
   border:1px solid rgba(255,255,255,0.7);
@@ -475,12 +475,13 @@ div .post {
   margin-top:60px;
 }
 
+/*
 @media (max-width:767px) {
   .header-blue .hero{
     margin-top:20px;
     text-align:center;
   }
-}
+}*/
 
 .header-blue .hero h1{
   color:#fff;
@@ -489,6 +490,7 @@ div .post {
   margin-bottom:24px;
   font-weight:300;
 }
+
 
 @media (max-width:991px) {
   .header-blue .hero h1{
@@ -548,6 +550,27 @@ div .post {
 }
 
 /* Template css END*/
+
+/* Fixing design template : login buttons */
+.navbar .login-buttons {
+    float: right;
+    margin-top: 10px;
+}
+
+div .navbar-header  {
+    float: left;
+}
+
+@media (max-width:1001px) {
+    .navbar .collapsed {
+    display: none;
+    }
+
+    .navbar .btn span.text{
+    display: none;
+    }
+}
+
 
 /*
 when on parent (thumbnail, change caption)
@@ -830,6 +853,12 @@ table a:hover {
     position:relative;
 }
 
+@media (max-width:1001px) {
+    .modal-content {
+    width: 90%;
+    }
+}
+
 /* Icons for login with Social Networks*/
 
 a:visited.btn-social-icon {
@@ -1045,3 +1074,4 @@ blog-comment::before,
 	line-height: 30px;
 	font-weight: 800;
 }
+
