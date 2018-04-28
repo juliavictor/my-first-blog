@@ -49,8 +49,6 @@ def write_file(df, name):
 
 
 def post_list(request):
-    # recs = pd.read_csv('/home/juliavictor/my-first-blog/recommend.csv')
-    recs = read_file('recommend.csv')
     if not request.session.session_key:
         request.session.save()
 
@@ -96,53 +94,58 @@ def get_user_key(request):
 
 def form_recommendations(request):
     # form list of 6 categories
-    recs = read_file('categories.csv')
 
     if not request.session.session_key:
         request.session.save()
 
     user_key = get_user_key(request)
 
-    # if user is new, fill all categories with 10
-    if not any(recs.session_id == user_key):
-        data = pd.DataFrame({'session_id': [user_key]})
-        for i in range(1,11):
-            data.loc[data.session_id == user_key, str(i)] = 10
-        recs = recs.append(data)
+    # Connecting to database
+    con = sqlite3.connect('db.sqlite3', timeout=10)
+    cursor = con.cursor()
+
+    user_cats = pd.read_sql_query("select user_id, category, value from "
+                                  "blog_post_categories where "
+                                   "user_id=\"" + str(user_key) + "\"", con)
+
+    if user_cats.empty:
+        # if user is new, fill all categories with 10
+        for i in range(1, 11):
+           t = (user_key, i, 10)
+           cursor.execute('insert into blog_post_categories(user_id,category,value)'
+                          ' values (?,?,?)', t)
+        con.commit()
 
         # show 6 most popular posts
         posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')[:6]
 
     else:
-        session_data = recs.loc[recs['session_id'] == user_key]
-        session_data = session_data.drop(['session_id'], axis=1)
-
         # sorting categories list by descending order
-        session_data = session_data.iloc[:, np.argsort(session_data.iloc[0])]
+        user_cats = user_cats.sort_values('value', ascending=False)
 
         # selecting top 6 categories for this user
-        cat_list = session_data.columns.values[-6:]
+        cat_list = user_cats['category'][:6].tolist()
         shuffle(cat_list)
 
         # selecting 1 random post from each category
+        # we have to change this logic later
         posts = []
         for category in cat_list:
             posts = [x for x in posts] + [y for y in Post.objects.filter(tag=category).order_by('?')[:1]]
 
     # decrease tag values of shown posts by 0.1
     for post in posts:
-        recs.loc[recs.session_id == user_key, str(post.tag)] -= 0.1
-
-    write_file(recs, 'categories.csv')
+        cursor.execute("update blog_post_categories set value = value - 0.1"
+                       " where category = " + str(post.tag) +
+                       " and user_id=\"" + str(user_key) + "\"")
+    con.commit()
+    cursor.close()
+    con.close()
 
     return posts
 
 
 def post_detail(request, pk):
-    # After post view we change the table for collaborative filtering
-    recs = read_file('recommend.csv')
-    cats = read_file('categories.csv')
-
     post = get_object_or_404(Post, pk=pk)
 
     # Fix for none session_key
@@ -155,18 +158,23 @@ def post_detail(request, pk):
     con = sqlite3.connect('db.sqlite3', timeout=10)
     cursor = con.cursor()
 
+    # Adding view to log
+    t = (user_key, pk, datetime.datetime.now())
+    cursor.execute('insert into blog_post_views(user_id,post_id,date) values (?,?,?)', t)
+    con.commit()
+
     # if not any(polls.session_id == user_key):
     #     data = pd.DataFrame({'session_id': [user_key]})
     #     recs = recs.append(data)
     #     polls = polls.append(data)
 
-    # if no one ever viewed this post
-    if str(pk) not in recs.columns.values:
-        recs.loc[recs.session_id == user_key, str(pk)] = 0
-
-    # if this user never watched this post
-    if recs.loc[recs.session_id == user_key, str(pk)].item() not in (0,1,2,3,4,5):
-        recs.loc[recs.session_id == user_key, str(pk)] = 0
+    # # if no one ever viewed this post
+    # if str(pk) not in recs.columns.values:
+    #     recs.loc[recs.session_id == user_key, str(pk)] = 0
+    #
+    # # if this user never watched this post
+    # if recs.loc[recs.session_id == user_key, str(pk)].item() not in (0,1,2,3,4,5):
+    #     recs.loc[recs.session_id == user_key, str(pk)] = 0
 
     # Plotting results
     # In loop getting results of all polls
@@ -176,7 +184,6 @@ def post_detail(request, pk):
     # !! const_value for graph visualisation
     const = 0
 
-
     for poll in post.polls.all():
         array = [0, 0, 0, 0, 0]
         post_value = pd.read_sql_query("SELECT * FROM blog_poll_values where post_id=" + pk +
@@ -184,7 +191,7 @@ def post_detail(request, pk):
 
         if not post_value.empty:
             poll_value = 1
-            print("This user already voted")
+            # print("This user already voted")
 
             post_values = pd.read_sql_query("select value, count(value) from (select user_id, "
                   "blog_poll_id, value, max(date) as date from blog_poll_values where "
@@ -215,20 +222,23 @@ def post_detail(request, pk):
 
         else:
             poll_value = 0
-            print("This user never voted")
-            # break
+            # print("This user never voted")
+            break
 
+    # Unique views counter setting
+    cursor.execute("select user_id, post_id, max(date) as date from blog_post_views "
+                   "where post_id=" + pk + " group by user_id")
+    post.views = len(cursor.fetchall())
+
+    # Increasing watched value by 0.8
+    cursor.execute("update blog_post_categories set value = value + 0.8"
+                       " where category = " + str(post.tag) +
+                       " and user_id=\"" + str(user_key) + "\"")
+    con.commit()
     cursor.close()
     con.close()
 
-    # Unique views counter setting
-    post.views = recs[pk].count()
     post.save()
-
-    cats.loc[cats.session_id == user_key, str(post.tag)] += 0.8
-
-    write_file(recs, 'recommend.csv')
-    write_file(cats, 'categories.csv')
 
     # For black & white filter
     request.session[pk] = 1
