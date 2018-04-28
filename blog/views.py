@@ -182,7 +182,7 @@ def post_detail(request, pk):
     js_results = []
     poll_value = 0
     # !! const_value for graph visualisation
-    const = 0
+    const = 1
 
     for poll in post.polls.all():
         array = [0, 0, 0, 0, 0]
