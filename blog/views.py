@@ -104,6 +104,28 @@ def form_recommendations(request):
     con = sqlite3.connect('db.sqlite3', timeout=10)
     cursor = con.cursor()
 
+    user_posts = pd.read_sql_query("select user_id, post_id from "
+                                  "blog_post_recs where "
+                                   "user_id=\"" + str(user_key) + "\"", con)
+
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+    # If this user never appeared before
+    if user_posts.empty:
+        for post in posts:
+            t = (user_key, post.pk, post.tag, 10)
+            cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
+                           ' values (?,?,?,?)', t)
+        con.commit()
+    else:
+        # updating new posts
+        for post in posts:
+            if post.pk not in user_posts["post_id"].tolist():
+                t = (user_key, post.pk, post.tag, 10)
+                cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
+                               ' values (?,?,?,?)', t)
+        con.commit()
+
+
     user_cats = pd.read_sql_query("select user_id, category, value from "
                                   "blog_post_categories where "
                                    "user_id=\"" + str(user_key) + "\"", con)
@@ -127,17 +149,33 @@ def form_recommendations(request):
         cat_list = user_cats['category'][:6].tolist()
         shuffle(cat_list)
 
-        # selecting 1 random post from each category
-        # we have to change this logic later
         posts = []
+        print("List of categories:")
+        print(cat_list)
         for category in cat_list:
-            posts = [x for x in posts] + [y for y in Post.objects.filter(tag=category).order_by('?')[:1]]
+            # selecting 1 best post from each category
+            cursor.execute("select post_id, max(value) as date from blog_post_recs "
+                           "where category=" + str(category) +
+                           " and user_id=\"" + str(user_key) + "\"")
+            post_id = cursor.fetchone()[0]
 
-    # decrease tag values of shown posts by 0.1
+            print("Best post from category: "+str(category))
+            print(post_id)
+
+            posts = [x for x in posts] + [y for y in Post.objects.filter(pk=post_id).order_by('?')[:1]]
+
+
     for post in posts:
+        # decrease tag values of shown posts by 0.1
         cursor.execute("update blog_post_categories set value = value - 0.1"
                        " where category = " + str(post.tag) +
                        " and user_id=\"" + str(user_key) + "\"")
+
+        # decrease values of shown posts by 0.1
+        cursor.execute("update blog_post_recs set value = value - 0.1"
+                       " where post_id = " + str(post.pk) +
+                       " and user_id=\"" + str(user_key) + "\"")
+
     con.commit()
     cursor.close()
     con.close()
@@ -230,10 +268,16 @@ def post_detail(request, pk):
                    "where post_id=" + pk + " group by user_id")
     post.views = len(cursor.fetchall())
 
-    # Increasing watched value by 0.8
+    # Increasing value by 0.8
     cursor.execute("update blog_post_categories set value = value + 0.8"
                        " where category = " + str(post.tag) +
                        " and user_id=\"" + str(user_key) + "\"")
+
+    # Decrease values of shown post by 1
+    cursor.execute("update blog_post_recs set value = value - 1"
+                   " where post_id = " + str(post.pk) +
+                   " and user_id=\"" + str(user_key) + "\"")
+
     con.commit()
     cursor.close()
     con.close()
@@ -268,9 +312,6 @@ def submit_poll(request, pk):
 
     for poll in post.polls.all():
         answer = request.POST.get('likert'+str(poll.id))
-        # print("I am in submit_poll. Answer value is")
-        # print(answer)
-        # polls.loc[polls.session_id == user_key, str(poll.id)] = answer
 
         # Adding new values
         t = (user_key, pk, poll.id, answer, datetime.datetime.now())
