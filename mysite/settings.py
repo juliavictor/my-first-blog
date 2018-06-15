@@ -25,7 +25,7 @@ SECRET_KEY = 'k=c(7!%4h20!ui8y(=p5bfb#5v(w3%%gm9yqmw#9yzd3f_^%@p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'juliavictor.pythonanywhere.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'juliavictor.pythonanywhere.com', 'opinionline.freshope.ru', 'localhost', 'opinionline.ru']
 
 # Application definition
 
