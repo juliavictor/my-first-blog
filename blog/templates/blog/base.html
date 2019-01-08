@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/blog.css' %}">
     <link rel="stylesheet" href="{% static 'css/social.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="shortcut icon" href="{% static 'logo.png' %}" />
 
     <script src="https://vk.com/js/api/openapi.js?152" type="text/javascript"></script>
 
@@ -29,8 +30,11 @@
             <div class="login-buttons">
                 {% if user.is_authenticated %}
                     <!--Hello, {{ user.username }}!-->
-                     <a class="btn btn-default action-button" role="button" href="{% url 'show_user_profile' %}">
+                    <a class="btn btn-default action-button" role="button" href="{% url 'show_vk_info' %}">
                         <span class="glyphicon glyphicon-user"></span>
+                         <span class="text">Вконтакте</span></a>
+                     <a class="btn btn-default action-button" role="button" href="{% url 'show_user_profile' %}">
+                        <span class="glyphicon glyphicon-signal"></span>
                          <span class="text">Профиль</span></a>
                     <a class="btn btn-default action-button" role="button" href="{% url 'logout' %}">
                         <span class="glyphicon glyphicon-log-out"></span>
@@ -67,26 +71,26 @@
 
   <div class="social-networks">
 
-  <a class="btn btn-block btn-social-icon btn-twitter"
-     href="{% url 'social:begin' 'twitter' %}">
-    <span class="fa fa-twitter"></span></a>
+  <!--<a class="btn btn-block btn-social-icon btn-twitter"-->
+     <!--href="{% url 'social:begin' 'twitter' %}">-->
+    <!--<span class="fa fa-twitter"></span></a>-->
 
   <a class="btn btn-block btn-social-icon btn-vk"
      href="{% url 'social:begin' 'vk-oauth2' %}">
     <span class="fa fa-vk"></span></a>
 
-  <!--<a class="btn btn-block btn-social btn-facebook"
-     href="{% url 'social:begin' 'facebook' %}">
-    <span class="fa fa-facebook"></span>Facebook
-  </a>-->
+  <!--<a class="btn btn-block btn-social btn-facebook"-->
+     <!--href="{% url 'social:begin' 'facebook' %}">-->
+    <!--<span class="fa fa-facebook"></span>Facebook-->
+  <!--</a>-->
 
-  <a class="btn btn-block btn-social-icon btn-google"
-     href="{% url 'social:begin' 'google-oauth2' %}">
-    <span class="fa fa-google"></span></a>
+  <!--<a class="btn btn-block btn-social-icon btn-google"-->
+     <!--href="{% url 'social:begin' 'google-oauth2' %}">-->
+    <!--<span class="fa fa-google"></span></a>-->
 
-  <a class="btn btn-block btn-social-icon btn-odnoklassniki"
-     href="{% url 'social:begin' 'odnoklassniki-oauth2' %}">
-    <span class="fa fa-odnoklassniki"></span></a>
+  <!--<a class="btn btn-block btn-social-icon btn-odnoklassniki"-->
+     <!--href="{% url 'social:begin' 'odnoklassniki-oauth2' %}">-->
+    <!--<span class="fa fa-odnoklassniki"></span></a>-->
   </div>
   </div>
 

@@ -1,0 +1,54 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+
+<h3>Привет, {{ username }}</h3>
+
+<style>
+   table {
+   display: table;
+   }
+</style>
+
+<table class="table">
+   <thead>
+      <tr>
+         <th>Тип поста</th>
+         <th>text</th>
+         <th>copy_history.text</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for post in feed.items %}
+      <tr>
+         <td>{{ post.post_type }}</td>
+         <td>{{ post.text }}</td>
+         <td>
+            {{ post.copy_history.0.text }}
+         </td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+
+
+<table class="table">
+   <thead>
+      <tr>
+         <th>Название группы</th>
+         <th>Описание (если есть)</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for group in groups.items %}
+      <tr>
+         <td>{{ group.name }}</td>
+         <td>{{ group.description }}</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+
+
+
+
+{% endblock %}
