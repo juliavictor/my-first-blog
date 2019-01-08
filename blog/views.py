@@ -12,6 +12,8 @@ import random
 from pathlib import Path
 import sqlite3
 import datetime
+import vk_api
+from .auth_info import vk_username, vk_password
 
 from django.template import RequestContext
 
@@ -330,6 +332,39 @@ def isNaN(num):
 
 
 @login_required
+def show_vk_info(request):
+    if not request.session.session_key:
+        request.session.save()
+
+    vk_session = vk_api.VkApi(vk_username, vk_password)
+    vk_session.auth()
+
+    vk = vk_session.get_api()
+    cur_user_id = str(request.user)[2:]
+
+    user_info = vk.users.get(user_id=cur_user_id, fields='interests')[0]
+
+    # print(user_info)
+
+    username = user_info['first_name'] + " " + user_info['last_name']
+
+    group_list = vk.groups.get(user_id=cur_user_id, extended=1, fields="description")
+
+    newsfeed = vk.wall.get(owner_id=cur_user_id, count=100)
+
+    print(newsfeed)
+
+    # if group_list['count'] != 0:
+    #     for group in group_list['items']:
+    #         print(group['name'])
+    #         print(group['description'])
+
+
+    return render(request, 'blog/vk_info.html', {'username': username, 'groups': group_list, 'feed': newsfeed})
+
+
+
+@login_required
 def show_user_profile(request):
     # Fix for none session_key
 
@@ -380,6 +415,7 @@ def post_new(request):
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
+
 @login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -394,10 +430,12 @@ def post_edit(request, pk):
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
 
+
 @login_required
 def post_draft_list(request):
     posts = Post.objects.filter(published_date__isnull=True).order_by('created_date')
     return render(request, 'blog/post_draft_list.html', {'posts': posts})
+
 
 @login_required
 def post_publish(request, pk):
@@ -405,11 +443,13 @@ def post_publish(request, pk):
     post.publish()
     return redirect('post_detail', pk=pk)
 
+
 @login_required
 def post_remove(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.delete()
     return redirect('post_list')
+
 
 def add_comment_to_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -433,17 +473,20 @@ def add_comment_to_post(request, pk):
         form = CommentForm()
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
 
+
 @login_required
 def comment_approve(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.approve()
     return redirect('post_detail', pk=comment.post.pk)
 
+
 @login_required
 def comment_remove(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.delete()
     return redirect('post_detail', pk=comment.post.pk)
+
 
 @login_required
 def home(request):
