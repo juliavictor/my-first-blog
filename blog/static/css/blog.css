@@ -293,7 +293,7 @@ div .post {
   padding-top:12px;
   padding-bottom:10px;
   color:#fff;
-  border-radius:0;
+  /*border-radius:0;*/
   box-shadow:none;
   border:none;
 }
@@ -350,7 +350,7 @@ div .post {
 }
 
 .header-blue .navbar .navbar-toggle{
-  border-color:rgba(255,255,255,0.3);
+  /*border-color:rgba(255,255,255,0.3);*/
 }
 
 .header-blue .navbar .navbar-toggle:hover, .header-blue .navbar-toggle:focus{
@@ -362,7 +362,7 @@ div .post {
 }
 
 .header-blue .navbar .navbar-collapse, .header-blue .navbar .navbar-form{
-  border-color:rgba(255,255,255,0.3);
+  /*border-color:rgba(255,255,255,0.3);*/
 }
 
 .header-blue .navbar .navbar-nav > .active > a, .header-blue .navbar .navbar-nav > .open > a{
@@ -426,8 +426,8 @@ div .post {
 }*/
 
 .header-blue .action-button, .header-blue .action-button:active{
-  border:1px solid rgba(255,255,255,0.7);
-  border-radius:20px;
+  /*border:1px solid rgba(255,255,255,0.7);
+  border-radius:20px;*/
   color:#ebeff1;
   box-shadow:none;
   text-shadow:none;
@@ -452,7 +452,7 @@ div .post {
 .header-blue .navbar .navbar-form .search-field{
   background:none;
   border:none;
-  border-bottom:1px solid transparent;
+  /*border-bottom:1px solid transparent;*/
   border-radius:0;
   color:#ccc;
   box-shadow:none;
@@ -468,7 +468,7 @@ div .post {
 }
 
 .header-blue .navbar .navbar-form .search-field:focus{
-  border-bottom:1px solid #ccc;
+  /*border-bottom:1px solid #ccc;*/
 }
 
 .header-blue .hero{
