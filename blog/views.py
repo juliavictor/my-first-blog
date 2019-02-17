@@ -152,8 +152,8 @@ def form_recommendations(request):
         shuffle(cat_list)
 
         posts = []
-        print("List of categories:")
-        print(cat_list)
+        # print("List of categories:")
+        # print(cat_list)
         for category in cat_list:
             # selecting 1 best post from each category
             cursor.execute("select post_id, max(value) as date from blog_post_recs "
@@ -161,8 +161,8 @@ def form_recommendations(request):
                            " and user_id=\"" + str(user_key) + "\"")
             post_id = cursor.fetchone()[0]
 
-            print("Best post from category: "+str(category))
-            print(post_id)
+            # print("Best post from category: "+str(category))
+            # print(post_id)
 
             posts = [x for x in posts] + [y for y in Post.objects.filter(pk=post_id).order_by('?')[:1]]
 
@@ -352,7 +352,7 @@ def show_vk_info(request):
 
     newsfeed = vk.wall.get(owner_id=cur_user_id, count=100)
 
-    print(newsfeed)
+    # print(newsfeed)
 
     # if group_list['count'] != 0:
     #     for group in group_list['items']:
