@@ -9,3 +9,4 @@ myvenv
 .idea\
 django.wsgi
 blog/auth_info.py
+db.sqlite3
