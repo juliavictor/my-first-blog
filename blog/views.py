@@ -16,7 +16,7 @@ import vk_api
 from .auth_info import vk_username, vk_password
 import os
 from django.template import RequestContext
-
+import avinit
 
 def connect_to_database():
     # print(os.getcwd())
@@ -344,9 +344,45 @@ def post_detail(request, pk):
     else:
         form = CommentForm()
 
+    svg_tag = svg_avatar(form_username(request))
+
+    post_comments = []
+
+    for comment in post.comments.all():
+        line = {}
+        line["author"] = comment.author
+        line["created_date"] = comment.created_date
+        line["text"] = comment.text
+        svg = svg_avatar(str(comment.author))
+        line["svg"] = svg
+        post_comments.append(line)
+
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'js_results': js_results,
-                   'poll_value': poll_value, 'form': form})
+                   'poll_value': poll_value, 'form': form, 'svg_tag': svg_tag,
+                   'post_comments': post_comments})
+
+
+def svg_avatar(username):
+    svg_tag = avinit.get_svg_avatar(username)
+    svg_tag = svg_tag.replace("200px", "50px")\
+        .replace("80px","24px").replace("200","50")
+    return svg_tag
+
+
+def form_username(request):
+    # User name
+    fn = request.user.first_name
+    ln = request.user.last_name
+    if len(ln) > 0:
+        user_name = fn + ' ' + ln
+    else:
+        if len(fn) > 0:
+            user_name = fn
+        else:
+            user_name = str(request.user)
+    return user_name
+
 
 
 def submit_poll(request, pk):
