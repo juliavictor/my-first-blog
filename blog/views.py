@@ -327,15 +327,7 @@ def post_detail(request, pk):
             form = CommentForm(request.POST)
             if form.is_valid():
                 comment = form.save(commit=False)
-                fn = request.user.first_name
-                ln = request.user.last_name
-                if len(ln) > 0:
-                    comment.author = fn + ' ' + ln
-                else:
-                    if len(fn) > 0:
-                        comment.author = fn
-                    else:
-                        comment.author = request.user
+                comment.author = request.user
                 comment.post = post
                 comment.save()
                 return redirect('post_detail', pk=post.pk)
@@ -344,16 +336,16 @@ def post_detail(request, pk):
     else:
         form = CommentForm()
 
-    svg_tag = svg_avatar(form_username(request))
+    svg_tag = svg_avatar(form_username(request.user))
 
     post_comments = []
 
     for comment in post.comments.all():
         line = {}
-        line["author"] = comment.author
+        line["author"] = form_username(comment.author)
         line["created_date"] = comment.created_date
         line["text"] = comment.text
-        svg = svg_avatar(str(comment.author))
+        svg = svg_avatar(line["author"])
         line["svg"] = svg
         post_comments.append(line)
 
@@ -370,17 +362,17 @@ def svg_avatar(username):
     return svg_tag
 
 
-def form_username(request):
+def form_username(user):
     # User name
-    fn = request.user.first_name
-    ln = request.user.last_name
+    fn = user.first_name
+    ln = user.last_name
     if len(ln) > 0:
         user_name = fn + ' ' + ln
     else:
         if len(fn) > 0:
             user_name = fn
         else:
-            user_name = str(request.user)
+            user_name = str(user)
     return user_name
 
 
