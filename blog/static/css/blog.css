@@ -10,6 +10,12 @@ label[for=id_text]{
     display: none;
 }
 
+svg {
+    background-size: 20px 30px;
+    float: left;
+    margin-right: 20px;
+}
+
 /* Thumbnail images */
 
 .col-sm-3 img {
@@ -591,7 +597,7 @@ blog-comment::before,
 .blog-comment .post-comments{
 	border: 1px solid #eee;
     margin-bottom: 20px;
-    margin-left: 85px;
+    margin-left: 70px;
 	margin-right: 0px;
     padding: 10px 20px;
     position: relative;

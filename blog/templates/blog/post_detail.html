@@ -197,10 +197,12 @@ zingchart.render({
                 <hr/>
 				<ul class="comments">
 
-{% for comment in post.comments.all %}
+{% for comment in post_comments %}
 	<li class="clearfix">
-	<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">
-	<div class="post-comments">
+	<!--<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">-->
+	        {% autoescape off %}{{ comment.svg }}{% endautoescape %}
+
+        <div class="post-comments">
 	 <p class="meta">{{ comment.created_date }} <a href="#">{{ comment.author }}</a>
          написал:</p>
          <p>
@@ -219,7 +221,8 @@ zingchart.render({
     <p></p>
 
     <li class="clearfix">
-	<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">
+        {% autoescape off %}{{ svg_tag }}{% endautoescape %}
+	<!--<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">-->
         <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
         <button type="submit" name="post-comment" class="btn btn-default">Добавить комментарий</button>
