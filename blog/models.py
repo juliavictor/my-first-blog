@@ -94,6 +94,8 @@ class Quote(models.Model):
     post = models.ForeignKey('blog.Post', related_name='quotes')
     quote = models.TextField()
     author = models.TextField()
+    source = models.TextField(default="")
+
     def __str__(self):
         return split_text(self.quote)
 

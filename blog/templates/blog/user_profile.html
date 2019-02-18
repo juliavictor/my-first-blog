@@ -2,7 +2,8 @@
 
 {% block content %}
 
-<!--{{ user.username }} -->
+<!--<img src="{{ profile_pic }}" class="avatar" alt="">-->
+Здравствуйте, {{ user_name }}!
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
 {% if poll_texts %}
@@ -19,7 +20,10 @@
     <tbody>
     {% for poll_text in poll_texts %}
       <tr>
-        <td style="width: 20%"><a href="{% url 'post_detail' pk=poll_text.0.post.pk %}">{{ poll_text.0.post }}</a></td>
+        <td style="width: 20%"><a href="{% url 'post_detail' pk=poll_text.0.post.pk %}">{{ poll_text.0.post }}</a>
+          <br>
+          <i>Дата: {{ poll_text.2.2 }}.{{ poll_text.2.1 }}.{{ poll_text.2.0 }}</i>
+        </td>
         <td style="width: 60%">{{ poll_text.0.question }}</td>
         <td style="width: 20%">{{ poll_text.1 }}</td>
       </tr>

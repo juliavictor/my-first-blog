@@ -14,8 +14,34 @@ import sqlite3
 import datetime
 import vk_api
 from .auth_info import vk_username, vk_password
-
+import os
 from django.template import RequestContext
+
+
+def connect_to_database():
+    # print(os.getcwd())
+    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+        con = sqlite3.connect('db.sqlite3', timeout=10)
+    else:
+        con = sqlite3.connect('proetcontra/db.sqlite3', timeout=10)
+    return con
+
+
+def get_user_profile_pic(request):
+    if str(request.user)[:1]!="id":
+        return ""
+
+    cur_user_id = str(request.user)[2:]
+
+    vk_session = vk_api.VkApi(vk_username, vk_password)
+    vk_session.auth()
+
+    vk = vk_session.get_api()
+
+    user_info = vk.users.get(user_id=cur_user_id, fields='photo_100')[0]
+
+    return user_info['photo_100']
+
 
 
 # Bug-fix function, twice excluding in order to produce sliceable set
@@ -103,7 +129,7 @@ def form_recommendations(request):
     user_key = get_user_key(request)
 
     # Connecting to database
-    con = sqlite3.connect('db.sqlite3', timeout=10)
+    con = connect_to_database()
     cursor = con.cursor()
 
     user_posts = pd.read_sql_query("select user_id, post_id from "
@@ -195,7 +221,7 @@ def post_detail(request, pk):
     user_key = get_user_key(request)
 
     # Connecting to database
-    con = sqlite3.connect('db.sqlite3', timeout=10)
+    con = connect_to_database()
     cursor = con.cursor()
 
     # Adding view to log
@@ -295,9 +321,32 @@ def post_detail(request, pk):
 
     # polls = random.shuffle([i for i in post.polls.all()])
 
+    # Comments section
+    if request.method == "POST":
+        if 'post-comment' in request.POST:
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.save(commit=False)
+                fn = request.user.first_name
+                ln = request.user.last_name
+                if len(ln) > 0:
+                    comment.author = fn + ' ' + ln
+                else:
+                    if len(fn) > 0:
+                        comment.author = fn
+                    else:
+                        comment.author = request.user
+                comment.post = post
+                comment.save()
+                return redirect('post_detail', pk=post.pk)
+        else:
+            form = CommentForm()
+    else:
+        form = CommentForm()
+
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'js_results': js_results,
-                   'poll_value': poll_value})
+                   'poll_value': poll_value, 'form': form})
 
 
 def submit_poll(request, pk):
@@ -309,7 +358,7 @@ def submit_poll(request, pk):
     post = get_object_or_404(Post, pk=pk)
 
     # Connecting to database
-    con = sqlite3.connect('db.sqlite3')
+    con = connect_to_database()
     cursor = con.cursor()
 
     for poll in post.polls.all():
@@ -374,7 +423,7 @@ def show_user_profile(request):
     user_key = get_user_key(request)
 
     # Connecting to database
-    con = sqlite3.connect('db.sqlite3', timeout=10)
+    con = connect_to_database()
     cursor = con.cursor()
 
     # Getting all polls this user voted
@@ -392,14 +441,35 @@ def show_user_profile(request):
 
             if post_val['value'][0] is not None:
                 value = post_val['value'][0]
+                date = post_val['date'][0].split()
+                date = date[0].split("-")
+                # print(date)
+
                 if not isNaN(value):
                     value = cmap[value]
-                    poll_texts.append((poll, value))
+                    poll_texts.append((poll, value, date))
 
     cursor.close()
     con.close()
 
-    return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts})
+
+    # Loading VK user image
+    profile_pic = get_user_profile_pic(request)
+
+    # User name
+    fn = request.user.first_name
+    ln = request.user.last_name
+    if len(ln) > 0:
+        user_name = fn + ' ' + ln
+    else:
+        if len(fn) > 0:
+            user_name = fn
+        else:
+            user_name = request.user
+
+    return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
+                                                      'profile_pic': profile_pic,
+                                                      'user_name': user_name})
 
 
 @login_required

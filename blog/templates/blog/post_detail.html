@@ -212,12 +212,25 @@ zingchart.render({
     {% empty %}
         <p></p>
         <p>Комментариев еще нет:(<p>
-        <p></p>
+        <br>
     {% endfor %}
 
     {% if user.is_authenticated%}
-       <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">
-               Добавить комментарий</a>
+    <p></p>
+
+    <li class="clearfix">
+	<img src="https://bootdey.com/img/Content/user_1.jpg" class="avatar" alt="">
+        <form method="POST" class="post-form">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="post-comment" class="btn btn-default">Добавить комментарий</button>
+    </form>
+
+	</li>
+    <!--<div class="compar">Новый комментарий</div>-->
+
+
+       <!--<a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">-->
+               <!--Добавить комментарий</a>-->
     {% endif %}
 
 				</ul>
