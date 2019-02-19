@@ -38,65 +38,51 @@
         </cite>
         </blockquote>
 
-        {% endfor %}
+        {% for poll in quote.polls.all %}
+        {% load get_at_index %}
 
+        {% if js_results|get_at_index:poll.id is None %}
+        <div class="wrap panel panel-default">
+        <form name="myForm" method="post">
+            {% csrf_token %}
+            <label class="statement">{{ poll.question }}</label>
+            <ul class='likert'>
+              <li>
+                <input type="radio" name="likert-{{ poll.id }}" value="5">
+                <label>Совершенно согласен</label>
+              </li>
+              <li>
+                <input type="radio" name="likert-{{ poll.id }}" value="4">
+                <label>Скорее согласен</label>
+              </li>
+              <li>
+                <input type="radio" name="likert-{{ poll.id }}" value="3" checked>
+                <label>Отношусь нейтрально</label>
+              </li>
+              <li>
+                <input type="radio" name="likert-{{ poll.id }}" value="2">
+                <label>Скорее не согласен</label>
+              </li>
+              <li>
+                <input type="radio" name="likert-{{ poll.id }}" value="1">
+                <label>Абсолютно не согласен</label>
+              </li>
+            </ul>
+           <div class="buttons">
+              <button class="submit" name="poll-{{ poll.id }}" >Проголосовать</button>
+            </div>
+          </form>
         </div>
-        </p>
-    </div>
 
-<br>
+        {% else %}
 
-
-{% if poll_value == 0 %}
-{% if post.polls.all %}
-<div class="wrap panel panel-default">
-    <form name="myForm" action="/post/{{post.pk}}/poll/" method="post" onsubmit="">
-        {% csrf_token %}
-<!-- {% load shuffle %} -->
-{% for poll in post.polls.all %}
-    <label class="statement">{{ poll.question }}</label>
-    <ul class='likert'>
-      <li>
-          <!-- onclick="this.form.submit()" -->
-        <input type="radio" name="likert{{ poll.id }}" value="5">
-        <label>Совершенно согласен</label>
-      </li>
-      <li>
-        <input type="radio" name="likert{{ poll.id }}" value="4">
-        <label>Скорее согласен</label>
-      </li>
-      <li>
-        <input type="radio" name="likert{{ poll.id }}" value="3" checked>
-        <label>Отношусь нейтрально</label>
-      </li>
-      <li>
-        <input type="radio" name="likert{{ poll.id }}" value="2">
-        <label>Скорее не согласен</label>
-      </li>
-      <li>
-        <input type="radio" name="likert{{ poll.id }}" value="1">
-        <label>Абсолютно не согласен</label>
-      </li>
-    </ul>
-
-{% endfor %}
-   <div class="buttons">
-      <!-- <button class="clear">Очистить</button>-->
-      <button class="submit">Проголосовать</button>
-    </div>
-  </form>
-</div>
-{% endif %}
-
-{% else %}
 <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
 <script> zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
 		ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9","ee6b7db5b51705a13dc2339db3edaf6d"];</script>
 
 <div class="wrap panel panel-default">
-    <div id="results">Результаты голосования:</div>
-{% for js_poll in js_results %}
-<div id="myChart{{js_poll.5}}"></div>
+    <p></p>
+<div id="myChart{{ poll.id }}"></div>
 <script>
 var myConfig = {
   "type": "area",
@@ -133,7 +119,7 @@ var myConfig = {
     }
   },
   "title": {
-    "text":"{{ js_poll.6 }}",
+    "text":"{{ js_results|get_at_index:poll.id|get_at_index:6 }}",
     "font-size": 15,
     "bold":false,
     "italic":true,
@@ -147,7 +133,7 @@ var myConfig = {
   "series": [
     {
       "alphaArea":"0.5",
-      "values": {{ js_poll|slice:"5" }},
+      "values": {{ js_results|get_at_index:poll.id|slice:"5" }},
       "gradient-colors":"#00FF00 #7FFF00 #FFFF00 #FFFF00 #FF0000",
       "gradient-stops":"0.1 0.2 0.4 0.6 0.9",
       "fill-angle":15,
@@ -156,18 +142,27 @@ var myConfig = {
 };
 
 zingchart.render({
-	id : 'myChart{{ js_poll.5 }}',
+	id : 'myChart{{ poll.id }}',
 	data : myConfig,
 	height: 250,
 	width: "100%"
 });
 </script>
-
-{% endfor %}
-
 </div>
 
-{% endif %}
+        {% endif %}
+
+
+         {% endfor %}
+
+        {% endfor %}
+
+        </div>
+        </p>
+    </div>
+
+<br>
+
 
 
 

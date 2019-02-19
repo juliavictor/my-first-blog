@@ -7,3 +7,4 @@ def shuffle(arg):
     tmp = list(arg)[:]
     random.shuffle(tmp)
     return tmp
+

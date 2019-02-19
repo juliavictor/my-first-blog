@@ -229,67 +229,64 @@ def post_detail(request, pk):
     cursor.execute('insert into blog_post_views(user_id,post_id,date) values (?,?,?)', t)
     con.commit()
 
-    # if not any(polls.session_id == user_key):
-    #     data = pd.DataFrame({'session_id': [user_key]})
-    #     recs = recs.append(data)
-    #     polls = polls.append(data)
+    # Polls: submitting on POST
+    if request.method == "POST":
+        for key in request.POST:
+            if 'likert' in key:
+                answer = request.POST[key]
+                poll_number = key.split('-')[1]
+                submit_poll(request, pk, answer, poll_number)
 
-    # # if no one ever viewed this post
-    # if str(pk) not in recs.columns.values:
-    #     recs.loc[recs.session_id == user_key, str(pk)] = 0
-    #
-    # # if this user never watched this post
-    # if recs.loc[recs.session_id == user_key, str(pk)].item() not in (0,1,2,3,4,5):
-    #     recs.loc[recs.session_id == user_key, str(pk)] = 0
-
-    # Plotting results
-    # In loop getting results of all polls
-
-    js_results = []
+    js_results = {}
+    # cur_user = []
     poll_value = 0
     # !! const_value for graph visualisation
     const = 1
 
-    for poll in post.polls.all():
-        array = [0, 0, 0, 0, 0]
-        post_value = pd.read_sql_query("SELECT * FROM blog_poll_values where post_id=" + pk +
-                                       " and user_id=\"" + str(user_key) + "\"", con)
+    for quote in post.quotes.all():
+        for poll in quote.polls.all():
+            # Check if current user voted in current poll
+            poll_status = pd.read_sql_query("SELECT * FROM blog_poll_values "
+                                           "where post_id=" + pk +
+                                           " and blog_poll_id=" + str(poll.id) +
+                                           " and user_id=\"" + str(user_key) + "\"", con)
 
-        if not post_value.empty:
-            poll_value = 1
-            # print("This user already voted")
+            # If user voted at least once
+            if not poll_status.empty:
+                array = [0, 0, 0, 0, 0]
 
-            post_values = pd.read_sql_query("select value, count(value) from (select user_id, "
-                  "blog_poll_id, value, max(date) as date from blog_poll_values where "
-                  "blog_poll_id="+str(poll.id)+" group by user_id) group by value", con)
+                post_values = pd.read_sql_query("select value, count(value) from (select user_id, "
+                      "blog_poll_id, value, max(date) as date from blog_poll_values where "
+                      "blog_poll_id="+str(poll.id)+" group by user_id) group by value", con)
 
-            values = post_values['value'].tolist()
-            counts = post_values['count(value)'].tolist()
+                values = post_values['value'].tolist()
+                counts = post_values['count(value)'].tolist()
 
-            for value, count in zip(values, counts):
-                for element in range(0, 5):
-                    if value == element+1:
-                        array[element] = count
+                for value, count in zip(values, counts):
+                    for element in range(0, 5):
+                        if value == element + 1:
+                            array[element] = count
 
-            # Adding constant to every value
-            array = [x + const for x in array]
+                # Adding constant to every value
+                array = [x + const for x in array]
 
-            # Counting percentages
-            sum_array = sum(array)
-            if sum_array != 0:
-                for element in range(0, 5):
-                    array[element] = int(round(array[element]*100/sum_array))
+                # Counting percentages
+                sum_array = sum(array)
+                if sum_array != 0:
+                    for element in range(0, 5):
+                        array[element] = int(round(array[element]*100/sum_array))
 
-            # Completing the final array
-            array = list(reversed(array))
-            array.append(poll.id)
-            array.append(poll.question)
-            js_results.append(array)
+                # Completing the final array
+                array = list(reversed(array))
+                array.append(poll.id)
+                array.append(poll.question)
+                js_results[poll.id] = array
 
-        else:
-            poll_value = 0
-            # print("This user never voted")
-            break
+            else:
+                # print("Never voted")
+                # We will not show results
+                js_results[poll.id] = None
+
 
     # Unique views counter setting
     cursor.execute("select user_id, post_id, max(date) as date from blog_post_views "
@@ -320,6 +317,9 @@ def post_detail(request, pk):
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
     # polls = random.shuffle([i for i in post.polls.all()])
+
+    # print(js_results)
+
 
     # Comments section
     if request.method == "POST":
@@ -354,7 +354,7 @@ def post_detail(request, pk):
 
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'js_results': js_results,
-                   'poll_value': poll_value, 'form': form, 'svg_tag': svg_tag,
+                   'form': form, 'svg_tag': svg_tag,
                    'post_comments': post_comments})
 
 
@@ -380,7 +380,7 @@ def form_username(user):
 
 
 
-def submit_poll(request, pk):
+def submit_poll(request, pk, answer, poll_id):
     # Fix for none session_key
     if not request.session.session_key:
         request.session.save()
@@ -392,19 +392,17 @@ def submit_poll(request, pk):
     con = connect_to_database()
     cursor = con.cursor()
 
-    for poll in post.polls.all():
-        answer = request.POST.get('likert'+str(poll.id))
-
-        # Adding new values
-        t = (user_key, pk, poll.id, answer, datetime.datetime.now())
-        cursor.execute('insert into blog_poll_values(user_id,post_id,blog_poll_id,value,date) values (?,?,?,?,?)', t)
-        con.commit()
+    # Adding new values
+    t = (user_key, pk, poll_id, answer, datetime.datetime.now())
+    cursor.execute('insert into blog_poll_values(user_id,post_id,blog_poll_id,value,date) values (?,?,?,?,?)', t)
+    con.commit()
 
     cursor.close()
     con.close()
 
-    # Reloading the page
-    return post_detail(request, pk)
+    return 0
+    # # Reloading the page
+    # return post_detail(request, pk)
 
 
 def isNaN(num):
