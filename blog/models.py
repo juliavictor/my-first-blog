@@ -83,7 +83,7 @@ class Comment(models.Model):
 
 
 class Poll(models.Model):
-    post = models.ForeignKey('blog.Post', related_name='polls')
+    # post = models.ForeignKey('blog.Post', related_name='polls')
     quote = models.ForeignKey('blog.Quote', related_name='polls')
     question = models.TextField()
     polarity = models.IntegerField(choices=FA_CHOICES, default=1)
