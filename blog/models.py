@@ -83,8 +83,10 @@ class Comment(models.Model):
 
 class Poll(models.Model):
     post = models.ForeignKey('blog.Post', related_name='polls')
+    quote = models.ForeignKey('blog.Quote', related_name='polls')
     question = models.TextField()
     polarity = models.IntegerField(choices=FA_CHOICES, default=1)
+
     def __str__(self):
         return split_text(self.question)
 
@@ -92,7 +94,7 @@ class Poll(models.Model):
 
 class Quote(models.Model):
     post = models.ForeignKey('blog.Post', related_name='quotes')
-    quote = models.TextField(blank=True)
+    quote = models.TextField()
     author = models.TextField(blank=True)
     source = models.TextField(default="")
 
@@ -100,14 +102,17 @@ class Quote(models.Model):
         return split_text(self.quote)
 
 
+
 class PollInline(admin.StackedInline):
     model = Poll
     extra = 1
+
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': glob_field_cols})},
         models.TextField: {'widget': Textarea(attrs={'cols': glob_field_cols,
                                                      'rows': glob_field_rows})},
     }
+
 
 class QuoteInline(admin.StackedInline):
     model = Quote
@@ -119,10 +124,9 @@ class QuoteInline(admin.StackedInline):
     }
 
 
-class PostAdmin(admin.ModelAdmin):
+class QuoteAdmin(admin.ModelAdmin):
     inlines = [
         PollInline,
-        QuoteInline,
     ]
 
     formfield_overrides = {
@@ -130,5 +134,27 @@ class PostAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'cols': glob_field_cols,
                                                      'rows': glob_field_rows})},
     }
+
+
+
+class PostAdmin(admin.ModelAdmin):
+    inlines = [
+        QuoteInline,
+        PollInline,
+    ]
+
+    list_display = ('title', 'tag', 'created_date')
+    ordering = ('-tag',)
+    formfield_overrides = {
+        models.CharField: {'widget': TextInput(attrs={'size': glob_field_cols})},
+        models.TextField: {'widget': Textarea(attrs={'cols': glob_field_cols,
+                                                     'rows': glob_field_rows})},
+    }
+
+    def view_homepage_link(self, obj):
+        return '<a href="%s" target="_blank">%s</a>' % (obj.homepage, obj.homepage,)
+
+    view_homepage_link.allow_tags = True
+    view_homepage_link.short_description = 'Tag'  # Optional
 
 
