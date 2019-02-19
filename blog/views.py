@@ -336,7 +336,10 @@ def post_detail(request, pk):
     else:
         form = CommentForm()
 
-    svg_tag = svg_avatar(form_username(request.user))
+    if request.user.is_authenticated:
+        svg_tag = svg_avatar(form_username(request.user))
+    else:
+        svg_tag = ""
 
     post_comments = []
 

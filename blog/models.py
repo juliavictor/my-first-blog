@@ -92,8 +92,8 @@ class Poll(models.Model):
 
 class Quote(models.Model):
     post = models.ForeignKey('blog.Post', related_name='quotes')
-    quote = models.TextField()
-    author = models.TextField()
+    quote = models.TextField(blank=True)
+    author = models.TextField(blank=True)
     source = models.TextField(default="")
 
     def __str__(self):

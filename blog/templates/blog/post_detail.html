@@ -4,23 +4,25 @@
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">-->
 
     <div class="post">
-        <div class="row date">
-            <div class="column">
-                <span class="badge" id="badge">
-                {{ post.get_tag_display }}
-                </span>
-            </div>
-            <div class="views">
-                <span class="glyphicon glyphicon-eye-open"
-                      aria-hidden="true">{{ post.views|stringformat:"i" }}
-                </span>
-            </div>
-        </div>
+        <!--<div class="date">-->
+            <!--<div class="column">-->
+            <!--    <span class="badge" id="badge">-->
+            <!--    {{ post.get_tag_display }}-->
+            <!--    </span>-->
+            <!--</div>-->
+        <!--</div>-->
+
 
         <div class="post-title">{{ post.title }}</div>
-        <p><img src="{{ post.image.url }} " class="img-responsive watch-right"/>
-        <div class="descript">{{ post.img_source}}</div>
-        </p>
+        <div class="views">
+        <!--<div>-->
+            <span class="glyphicon glyphicon-eye-open"
+              aria-hidden="true">{{ post.views|stringformat:"i" }}
+            </span>
+        </div>
+        <!--<p><img src="{{ post.image.url }} " class="img-responsive watch-right"/>-->
+        <!--<div class="descript">{{ post.img_source}}</div>-->
+        <!--</p>-->
         <!-- {{ post.text|linebreaksbr }} -->
         <p class="post-descript">
         <div class="container-quote">
@@ -29,7 +31,11 @@
 
         <blockquote class="quote-card">
         <p>{{ quote.quote }}</p>
-        <cite>{{ quote.author|linebreaksbr }}</cite>
+        <cite>{{ quote.author|linebreaksbr }}
+            {% if quote.source|length > 0 %}
+                <a href="{{ quote.source }}">[Источник]</a>
+            {% endif %}
+        </cite>
         </blockquote>
 
         {% endfor %}
@@ -166,7 +172,7 @@ zingchart.render({
 
 
     <hr>
-    <p class="detail-rec">Вам также может понравиться:</p>
+    <p class="detail-rec">Вам также может быть интересно:</p>
     <div class="container three-rec">
         <div class="col-md-10">
         <div class="row">

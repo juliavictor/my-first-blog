@@ -16,6 +16,10 @@ svg {
     margin-right: 20px;
 }
 
+a:focus {
+    text-decoration: none;
+}
+
 /* Thumbnail images */
 
 .col-sm-3 img {
@@ -157,7 +161,7 @@ a, a:visited, a:hover {
 
 .views {
     color: #828282;
-    float: right;
+    /*float: right;*/
     margin-right: 2%;
 }
 
