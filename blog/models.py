@@ -6,6 +6,7 @@ from django import forms
 from django.core.validators import MinValueValidator
 from django.contrib import admin
 from django.forms import TextInput, Textarea
+import nested_admin
 
 
 STATUS_CHOICES = (
@@ -157,4 +158,32 @@ class PostAdmin(admin.ModelAdmin):
     view_homepage_link.allow_tags = True
     view_homepage_link.short_description = 'Tag'  # Optional
 
+
+
+class PollNewInline(nested_admin.NestedStackedInline):
+    model = Poll
+    extra = 0
+    # sortable_field_name = "position"
+
+class TocSectionInline(nested_admin.NestedStackedInline):
+    model = Quote
+    extra = 0
+    # sortable_field_name = "position"
+    inlines = [PollNewInline]
+
+class TableOfContentsAdmin(nested_admin.NestedModelAdmin):
+    inlines = [TocSectionInline]
+    list_display = ('title', 'tag', 'created_date')
+    ordering = ('-tag',)
+    formfield_overrides = {
+        models.CharField: {'widget': TextInput(attrs={'size': glob_field_cols})},
+        models.TextField: {'widget': Textarea(attrs={'cols': glob_field_cols,
+                                                     'rows': glob_field_rows})},
+    }
+
+    def view_homepage_link(self, obj):
+        return '<a href="%s" target="_blank">%s</a>' % (obj.homepage, obj.homepage,)
+
+    view_homepage_link.allow_tags = True
+    view_homepage_link.short_description = 'Tag'  # Optional
 
