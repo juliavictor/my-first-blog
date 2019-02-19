@@ -20,7 +20,9 @@
     <tbody>
     {% for poll_text in poll_texts %}
       <tr>
-        <td style="width: 20%"><a href="{% url 'post_detail' pk=poll_text.0.post.pk %}">{{ poll_text.0.post }}</a>
+        <td style="width: 20%">
+          <a href="{% url 'post_detail' pk=poll_text.0.quote.post.pk %}">
+            {{ poll_text.0.quote.post }}</a>
           <br>
           <i>Дата: {{ poll_text.2.2 }}.{{ poll_text.2.1 }}.{{ poll_text.2.0 }}</i>
         </td>

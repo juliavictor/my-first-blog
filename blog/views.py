@@ -462,21 +462,24 @@ def show_user_profile(request):
             3: 'Отношусь нейтрально', 4: 'Скорее согласен',
             5: 'Совершенно согласен'}
 
+
     for post in posts:
-        for poll in post.polls.all():
-            post_val = pd.read_sql_query("select user_id, blog_poll_id, post_id, value, "
-                  "max(date) as date from blog_poll_values where blog_poll_id="
-                  + str(poll.id) + " and user_id=\"" + str(user_key) + "\"", con)
+        for quote in post.quotes.all():
+            for poll in quote.polls.all():
+                print(poll.question)
+                post_val = pd.read_sql_query("select user_id, blog_poll_id, post_id, value, "
+                      "max(date) as date from blog_poll_values where blog_poll_id="
+                      + str(poll.id) + " and user_id=\"" + str(user_key) + "\"", con)
 
-            if post_val['value'][0] is not None:
-                value = post_val['value'][0]
-                date = post_val['date'][0].split()
-                date = date[0].split("-")
-                # print(date)
+                if post_val['value'][0] is not None:
+                    value = post_val['value'][0]
+                    date = post_val['date'][0].split()
+                    date = date[0].split("-")
+                    # print(date)
 
-                if not isNaN(value):
-                    value = cmap[value]
-                    poll_texts.append((poll, value, date))
+                    if not isNaN(value):
+                        value = cmap[value]
+                        poll_texts.append((poll, value, date))
 
     cursor.close()
     con.close()
@@ -496,6 +499,7 @@ def show_user_profile(request):
         else:
             user_name = request.user
 
+    print(poll_texts)
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
                                                       'profile_pic': profile_pic,
                                                       'user_name': user_name})
