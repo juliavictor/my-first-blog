@@ -14,9 +14,11 @@ import sqlite3
 import datetime
 import vk_api
 from .auth_info import vk_username, vk_password
+from .topic_profile import *
 import os
 from django.template import RequestContext
 import avinit
+
 
 def connect_to_database():
     # print(os.getcwd())
@@ -466,7 +468,7 @@ def show_user_profile(request):
     for post in posts:
         for quote in post.quotes.all():
             for poll in quote.polls.all():
-                print(poll.question)
+                # print(poll.question)
                 post_val = pd.read_sql_query("select user_id, blog_poll_id, post_id, value, "
                       "max(date) as date from blog_poll_values where blog_poll_id="
                       + str(poll.id) + " and user_id=\"" + str(user_key) + "\"", con)
@@ -484,7 +486,6 @@ def show_user_profile(request):
     cursor.close()
     con.close()
 
-
     # Loading VK user image
     profile_pic = get_user_profile_pic(request)
 
@@ -499,10 +500,45 @@ def show_user_profile(request):
         else:
             user_name = request.user
 
-    print(poll_texts)
+    # print(poll_texts)
+
+    # Temporary test function!
+    # temp_topic_profile()
+
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
                                                       'profile_pic': profile_pic,
                                                       'user_name': user_name})
+
+
+def temp_topic_profile():
+    with open("dict.json", "r") as read_file:
+        dictionary = json.load(read_file)
+
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
+    for post in posts:
+        if len(post.quotes.all()) == 0:
+            continue
+
+        post_text = ""
+        print(post.title)
+        post_text += post.title + '\n'
+
+        for quote in post.quotes.all():
+            post_text += quote.quote + '\n'
+
+            for poll in quote.polls.all():
+                post_text += poll.question + '\n'
+
+        # Building topic profile for post's text
+        vector = form_doc_vector(normalize_doc(post_text), dictionary, True)
+
+        print(form_topic_rating(vector, dictionary)[:5])
+
+
+
+
+    return 0
 
 
 @login_required
