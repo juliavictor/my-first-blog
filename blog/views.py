@@ -536,10 +536,13 @@ def temp_topic_profile():
 
         # Building topic profile for post's text
         vector = form_doc_vector(normalize_doc(post_text), dictionary, True)
+        # print(vector)
 
-        print(form_topic_rating(vector, dictionary)[:5])
+        post.topic_profile = json.dumps(vector)
+        post.save()
+        # # json.loads(source)
 
-
+        # print(form_topic_rating(vector, dictionary)[:5])
 
 
     return 0
