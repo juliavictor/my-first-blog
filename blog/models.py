@@ -54,6 +54,9 @@ class Post(models.Model):
     published_date = models.DateTimeField(
             blank=True, null=True)
     image = models.ImageField(upload_to='img', default="default-image.png")
+
+    topic_profile = models.TextField(default="")
+
     def approved_comments(self):
         return self.comments.filter(approved_comment=True)
 
@@ -180,6 +183,9 @@ class TableOfContentsAdmin(nested_admin.NestedModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'cols': glob_field_cols,
                                                      'rows': glob_field_rows})},
     }
+
+    exclude = ("topic_profile",)
+    readonly_fields = ('topic_profile',)
 
     def view_homepage_link(self, obj):
         return '<a href="%s" target="_blank">%s</a>' % (obj.homepage, obj.homepage,)

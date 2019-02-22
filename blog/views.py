@@ -511,8 +511,12 @@ def show_user_profile(request):
 
 
 def temp_topic_profile():
-    with open("dict.json", "r") as read_file:
-        dictionary = json.load(read_file)
+    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+        with open("dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
+    else:
+        with open("proetcontra/dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
 
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
 
