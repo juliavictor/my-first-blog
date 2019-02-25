@@ -18,7 +18,7 @@ from .topic_profile import *
 import os
 from django.template import RequestContext
 import avinit
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .models import Post, Quote, QuoteInline
 
@@ -594,8 +594,26 @@ def user_topic_profile(request):
 
 # On post save, call topic_profile_rebuild
 @receiver(post_save, sender=Post)
-def my_handler(sender, instance, **kwargs):
+def post_handler(sender, instance, update_fields, **kwargs):
+    if update_fields is not None and len(update_fields) == 1:
+        for field in update_fields:
+            if field == "topic_profile":
+                return
+
     post_topic_profile(instance)
+
+
+# On Quote & Poll save or delete, call topic_profile rebuild
+@receiver(post_save, sender=Quote)
+@receiver(post_delete, sender=Quote)
+def quote_handler(instance, **kwargs):
+    post_topic_profile(instance.post)
+
+
+@receiver(post_save, sender=Poll)
+@receiver(post_delete, sender=Poll)
+def poll_handler(instance, **kwargs):
+    post_topic_profile(instance.quote.post)
 
 
 # Rebuilds topic profiles for selected posts
@@ -627,8 +645,8 @@ def post_topic_profile(posts):
         # Building topic profile for post's text
         vector = form_doc_vector(normalize_doc(post_text), dictionary, True)
 
-        # In order to avoid recursion, i.e. not to call "save" anymore
-        Post.objects.filter(pk=post.pk).update(topic_profile=json.dumps(vector))
+        post.topic_profile = json.dumps(vector)
+        post.save(update_fields=["topic_profile"])
         # # json.loads(source)
 
         # print(form_topic_rating(vector, dictionary)[:5])
