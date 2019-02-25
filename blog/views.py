@@ -18,6 +18,16 @@ from .topic_profile import *
 import os
 from django.template import RequestContext
 import avinit
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Post, Quote, QuoteInline
+
+
+def current_catalog():
+    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+        return ""
+    else:
+        return "proetcontra/"
 
 
 def connect_to_database():
@@ -27,23 +37,6 @@ def connect_to_database():
     else:
         con = sqlite3.connect('proetcontra/db.sqlite3', timeout=10)
     return con
-
-
-def get_user_profile_pic(request):
-    if str(request.user)[:1]!="id":
-        return ""
-
-    cur_user_id = str(request.user)[2:]
-
-    vk_session = vk_api.VkApi(vk_username, vk_password)
-    vk_session.auth()
-
-    vk = vk_session.get_api()
-
-    user_info = vk.users.get(user_id=cur_user_id, fields='photo_100')[0]
-
-    return user_info['photo_100']
-
 
 
 # Bug-fix function, twice excluding in order to produce sliceable set
@@ -381,7 +374,6 @@ def form_username(user):
     return user_name
 
 
-
 def submit_poll(request, pk, answer, poll_id):
     # Fix for none session_key
     if not request.session.session_key:
@@ -412,39 +404,6 @@ def isNaN(num):
 
 
 @login_required
-def show_vk_info(request):
-    if not request.session.session_key:
-        request.session.save()
-
-    vk_session = vk_api.VkApi(vk_username, vk_password)
-    vk_session.auth()
-
-    vk = vk_session.get_api()
-    cur_user_id = str(request.user)[2:]
-
-    user_info = vk.users.get(user_id=cur_user_id, fields='interests')[0]
-
-    # print(user_info)
-
-    username = user_info['first_name'] + " " + user_info['last_name']
-
-    group_list = vk.groups.get(user_id=cur_user_id, extended=1, fields="description")
-
-    newsfeed = vk.wall.get(owner_id=cur_user_id, count=100)
-
-    # print(newsfeed)
-
-    # if group_list['count'] != 0:
-    #     for group in group_list['items']:
-    #         print(group['name'])
-    #         print(group['description'])
-
-
-    return render(request, 'blog/vk_info.html', {'username': username, 'groups': group_list, 'feed': newsfeed})
-
-
-
-@login_required
 def show_user_profile(request):
     # Fix for none session_key
 
@@ -463,7 +422,6 @@ def show_user_profile(request):
     cmap = {1: 'Абсолютно не согласен', 2: 'Скорее не согласен',
             3: 'Отношусь нейтрально', 4: 'Скорее согласен',
             5: 'Совершенно согласен'}
-
 
     for post in posts:
         for quote in post.quotes.all():
@@ -486,9 +444,6 @@ def show_user_profile(request):
     cursor.close()
     con.close()
 
-    # Loading VK user image
-    profile_pic = get_user_profile_pic(request)
-
     # User name
     fn = request.user.first_name
     ln = request.user.last_name
@@ -502,15 +457,149 @@ def show_user_profile(request):
 
     # print(poll_texts)
 
-    # Temporary test function!
-    # temp_topic_profile()
+    # # Forming topic profiles for ALL posts
+    # posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+    # post_topic_profile(posts)
+
+    # Testing topic profile recommendations
+    # If user is logged with VK:
+    # if logged_with_vk(request):
+    #     # Loading user vector
+    #     user_vector = user_topic_profile(request)
+    #
+    #     # # Forming rating of best recommended post for current user
+    #     # sorted_recs = topic_profile_recommendations(user_vector)
+    #     #
+    #     # for post_rec in sorted_recs[:10]:
+    #     #     print(post_rec['post'].title + ': ' + str(np.round(post_rec['value'],5)))
 
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
-                                                      'profile_pic': profile_pic,
                                                       'user_name': user_name})
 
 
-def temp_topic_profile():
+# Forms list of recommended posts for user
+def topic_profile_recommendations(user_vector):
+    # Once again loading all posts
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
+    user_post_recs = []
+
+    for post in posts:
+        if len(post.quotes.all()) == 0:
+            continue
+
+        post_vector = json.loads(post.topic_profile)
+
+        user_rec = {'post': post, 'value': compare_vectors(user_vector, post_vector)}
+        user_post_recs.append(user_rec)
+
+    # Sorting posts
+    sorted_recs = sorted(user_post_recs, key=lambda k: k['value'], reverse=True)
+
+    return sorted_recs
+
+
+# Checks whether or not current user
+# is logged in using any social network
+def logged_with_vk(request):
+    return request.user.social_auth.exists()
+
+
+# Downloads the wall of VK group
+def get_group_wall(vk, name):
+    name = '-' + str(name)
+    news_feed = ""
+
+    try:
+        feed = vk.wall.get(owner_id=name, count=100)
+
+    except vk_api.exceptions.ApiError:
+        # print("Пропускаем группу т.к. стена закрыта...")
+        return news_feed
+
+    for post in feed['items']:
+        news_feed += post['text'] + "\n"
+
+    return news_feed
+
+
+# Builds topic profile for VK user
+def user_topic_profile(request):
+    if not logged_with_vk(request):
+        return 0
+
+    user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    # Check if current user' topic profile is in database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_value = pd.read_sql_query("select uid, topic_profile, date "
+                                   "from vk_topic_profiles "
+                                   "where uid=\"" + str(user_id) + "\"", con)
+
+    # If vector for current user exists, fetch it from the database
+    if not user_value.empty:
+        vector = json.loads(user_value['topic_profile'][0])
+
+    else:
+        # Connecting to VK Api
+        vk_session = vk_api.VkApi(vk_username, vk_password)
+        vk_session.auth()
+
+        vk = vk_session.get_api()
+
+        # Получаем словарь из файла
+        with open(current_catalog() + "dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
+
+        # Получаем список групп пользователя вместе с количеством участников
+        group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
+
+        feed = ""
+
+        # Для каждой группы в цикле проверяем количество участников
+        # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
+        for group in group_list['items']:
+            # print(str(group['id']) + "...")
+            try:
+                members = group['members_count']
+            except KeyError:
+                continue
+
+            if 50 <= members <= 1000000:
+                feed += get_group_wall(vk, group['id'])
+
+        # Строим тематический профиль
+        vector = form_doc_vector(normalize_doc(feed), dictionary, True)
+
+        # Нормализуем его
+        vector = normalize_vector(vector)
+        # print(vector)
+
+        # # Выводим рейтинг наиболее популярных категорий
+        # for line in form_topic_rating(vector, dictionary)[:10]:
+        #     print(line[0] + ": " + str(np.round(line[1],5)))
+
+        # Write new vector to database
+        t = (user_id, json.dumps(vector), datetime.datetime.now())
+        cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date) values (?,?,?)', t)
+        con.commit()
+
+    cursor.close()
+    con.close()
+
+    return vector
+
+
+# On post save, call topic_profile_rebuild
+@receiver(post_save, sender=Post)
+def my_handler(sender, instance, **kwargs):
+    post_topic_profile(instance)
+
+
+# Rebuilds topic profiles for selected posts
+def post_topic_profile(posts):
     if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
         with open("dict.json", "r") as read_file:
             dictionary = json.load(read_file)
@@ -518,14 +607,15 @@ def temp_topic_profile():
         with open("proetcontra/dict.json", "r") as read_file:
             dictionary = json.load(read_file)
 
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+    if isinstance(posts, Post):
+        posts = [posts]
 
     for post in posts:
-        if len(post.quotes.all()) == 0:
-            continue
+        # if len(post.quotes.all()) == 0:
+        #     continue
 
         post_text = ""
-        print(post.title)
+        # print("Dude, i'm rebuilding vector for " + str(post.title))
         post_text += post.title + '\n'
 
         for quote in post.quotes.all():
@@ -536,10 +626,9 @@ def temp_topic_profile():
 
         # Building topic profile for post's text
         vector = form_doc_vector(normalize_doc(post_text), dictionary, True)
-        # print(vector)
 
-        post.topic_profile = json.dumps(vector)
-        post.save()
+        # In order to avoid recursion, i.e. not to call "save" anymore
+        Post.objects.filter(pk=post.pk).update(topic_profile=json.dumps(vector))
         # # json.loads(source)
 
         # print(form_topic_rating(vector, dictionary)[:5])
