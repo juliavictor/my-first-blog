@@ -44,28 +44,28 @@
 
         {% if js_results|get_at_index:poll.id is None %}
         <div class="wrap panel panel-default">
-        <form name="myForm" method="post">
+        <form name="myForm" method="post" id="{{ poll.id }}">
             {% csrf_token %}
             <label class="statement">{{ poll.question }}</label>
             <ul class='likert'>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="5">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="5">
                 <label>Совершенно согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="4">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="4">
                 <label>Скорее согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="3" checked>
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="3" checked>
                 <label>Отношусь нейтрально</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="2">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="2">
                 <label>Скорее не согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="1">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="1">
                 <label>Абсолютно не согласен</label>
               </li>
             </ul>
@@ -242,4 +242,3 @@ zingchart.render({
 
 
 {% endblock %}
-
