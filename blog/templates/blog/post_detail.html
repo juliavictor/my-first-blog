@@ -39,6 +39,7 @@
         </cite>
         </blockquote>
 
+        {% if user.is_authenticated%}
         {% for poll in quote.polls.all %}
         {% load get_at_index %}
 
@@ -153,10 +154,12 @@ zingchart.render({
 
         {% endif %}
 
+        {% endfor %}
 
-         {% endfor %}
+        {% endif %}
 
         {% endfor %}
+
 
         </div>
         </p>
