@@ -23,7 +23,7 @@ import avinit
 
 def connect_to_database():
     print(os.getcwd())
-    if os.getcwd() == "/mnt/d/projects/proetcontra":
+    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
         con = sqlite3.connect('db.sqlite3', timeout=10)
     else:
         con = sqlite3.connect('proetcontra/db.sqlite3', timeout=10)
@@ -549,7 +549,7 @@ def show_user_profile(request):
 
 
 def temp_topic_profile():
-    if os.getcwd() == "/mnt/d/projects/proetcontra":
+    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
         with open("dict.json", "r") as read_file:
             dictionary = json.load(read_file)
     else:
