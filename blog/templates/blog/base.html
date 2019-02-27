@@ -20,6 +20,10 @@
     {% block extrajs %}
     {% endblock %}
 
+    <!-- VK social media sharing -->
+    <script type="text/javascript" src="https://vk.com/js/api/share.js?95" charset="windows-1251"></script>
+<script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+
 </head>
 
 <body>
@@ -29,8 +33,6 @@
 
             <div class="login-buttons">
                 {% if user.is_authenticated %}
-                <!--<a title="Разработка" href="{% url 'show_vk_info' %}">-->
-                    <!--<i class="fab fa-vk"></i></a>-->
                 <a title="Профиль" href="{% url 'show_user_profile' %}">
                     <i class="fas fa-user"></i></a>
                 <a title="Выйти" href="{% url 'logout' %}">

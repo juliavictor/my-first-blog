@@ -4,6 +4,7 @@ from scipy import spatial
 import numpy as np
 import operator
 import json
+import math
 
 # Для работы также необходимо установить пакет для русского языка
 # pip install -U pymorphy2-dicts-ru
@@ -14,6 +15,10 @@ morph = pymorphy2.MorphAnalyzer()
 # Косинусное расстояние
 def compare_vectors(vec1, vec2):
     result = 1 - spatial.distance.cosine(vec1, vec2)
+
+    if math.isnan(result):
+        result = 0
+
     return result
 
 
@@ -60,6 +65,7 @@ def count_keyword_in_dict(keyword, dictionary):
 # Формирование вектора документа
 # doc - исходный документ
 # dict - словарь
+# norm_keywords - флаг, определяющий использование улучшенного алгоритма расчета веса ключевого слова
 # debug - флаг отладки (выводит на экран найденные ключевые слова)
 def form_doc_vector(doc, dict, norm_keywords, debug=None):
     vector = []
