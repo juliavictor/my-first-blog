@@ -65,6 +65,7 @@ def count_keyword_in_dict(keyword, dictionary):
 # Формирование вектора документа
 # doc - исходный документ
 # dict - словарь
+# norm_keywords - флаг, определяющий использование улучшенного алгоритма расчета веса ключевого слова
 # debug - флаг отладки (выводит на экран найденные ключевые слова)
 def form_doc_vector(doc, dict, norm_keywords, debug=None):
     vector = []

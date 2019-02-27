@@ -453,14 +453,14 @@ form .statement {
 }
 
 /* User statistic page */
-table {
+table.user-stat {
   background: white;
   font-size: 11pt;
   display: none;
   color: black;
 }
 
-table a:hover {
+table.user-stat a:hover {
   text-decoration: none;
   color: #a6c0fe;
 }
@@ -640,5 +640,24 @@ blog-comment::before,
 	font-size: 26px;
 	line-height: 30px;
 	font-weight: 800;
+}
+
+
+/* Social media sharing */
+.social-media {
+    padding-bottom: 10px;
+    padding: auto;
+}
+
+.social-media * {
+    float: left;
+}
+
+.social-media :not(:first-child) {
+    margin-right: 3px;
+}
+
+hr {
+    clear: both;
 }
 
