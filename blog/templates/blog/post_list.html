@@ -1,23 +1,26 @@
-{% extends 'blog/base.html' %}
-
+{% extends 'blog/base4.html' %}
 {% block content %}
-    <div class="post">
-    <div class="container">
-        <div class="row">
-            {% for post in posts %}
-            <div class="col-sm-3">
-                <div class="thumbnail item">
-                    <a href="{% url 'post_detail' pk=post.pk %}" >
-                    <div class="item">
-                       <img src="{{ post.image.url }}" class="img-responsive watch-right"/>
-                    </div>
 
-                    <div id="caption"> {{ post.title }} </div></a>
-                </div>
-             </div>
-            {% endfor %}
-        </div></div></div>
-    </div>
-<a class="refresh" href="." id="refresh"><span class="glyphicon glyphicon-refresh"></span></a>
+<div class="container">
+   <div class="card-columns">
+
+      {% for post in posts %}
+      <div class="card">
+         <a href="{% url 'post_detail' pk=post.pk %}" >
+            <img src="{{ post.image.url }}" class="card-img img-fluid"/>
+            <div class="card-body">
+                 <div class="card-title"> {{ post.title }} </div>
+            </div>
+         </a>
+      </div>
+
+      {% endfor %}
+
+   </div>
+</div>
+
+<a class="refresh" href="." id="refresh">
+    <span class="glyphicon glyphicon-refresh"></span>
+</a>
 
 {% endblock content %}
