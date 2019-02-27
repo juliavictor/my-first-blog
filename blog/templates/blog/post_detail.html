@@ -1,5 +1,9 @@
 {% extends 'blog/base.html' %}
 
+{% block extrajs %}
+<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+{% endblock %}
+
 {% block content %}
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">-->
 
@@ -39,34 +43,33 @@
         </cite>
         </blockquote>
 
-        {% if user.is_authenticated%}
         {% for poll in quote.polls.all %}
         {% load get_at_index %}
 
         {% if js_results|get_at_index:poll.id is None %}
         <div class="wrap panel panel-default">
-        <form name="myForm" method="post">
+        <form name="myForm" method="post" id="{{ poll.id }}">
             {% csrf_token %}
             <label class="statement">{{ poll.question }}</label>
             <ul class='likert'>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="5">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="5">
                 <label>Совершенно согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="4">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="4">
                 <label>Скорее согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="3" checked>
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="3" checked>
                 <label>Отношусь нейтрально</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="2">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="2">
                 <label>Скорее не согласен</label>
               </li>
               <li>
-                <input type="radio" name="likert-{{ poll.id }}" value="1">
+                <input type="radio" name="likert-{{ poll.id }}" id="poll" value="1">
                 <label>Абсолютно не согласен</label>
               </li>
             </ul>
@@ -154,18 +157,17 @@ zingchart.render({
 
         {% endif %}
 
+
+         {% endfor %}
+
         {% endfor %}
-
-        {% endif %}
-
-        {% endfor %}
-
 
         </div>
         </p>
     </div>
 
 <br>
+
 
 <p class="detail-rec">Поделиться ссылкой в социальных сетях:</p>
 
@@ -246,6 +248,8 @@ document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk
 </div>
 
 
+
+
     <hr>
     <p class="detail-rec">Вам также может быть интересно:</p>
     <div class="container three-rec">
@@ -321,4 +325,3 @@ document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk
 
 
 {% endblock %}
-

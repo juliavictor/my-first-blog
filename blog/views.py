@@ -4,6 +4,7 @@ from .models import Post, Comment, Poll
 from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from random import shuffle
 import pandas as pd
 import numpy as np
@@ -374,29 +375,67 @@ def form_username(user):
     return user_name
 
 
+
+
 def submit_poll(request, pk, answer, poll_id):
-    # Fix for none session_key
-    if not request.session.session_key:
-        request.session.save()
+    """ Submiting poll with given answer. Returns json for AJAX. """
+    if request.method == 'POST':
+        js_results = {}
+        if not request.session.session_key:
+            request.session.save()
 
-    user_key = get_user_key(request)
-    post = get_object_or_404(Post, pk=pk)
+        user_key = get_user_key(request)
+        post = get_object_or_404(Post, pk=pk)
 
-    # Connecting to database
-    con = connect_to_database()
-    cursor = con.cursor()
+        # Connecting to database
+        con = connect_to_database()
+        cursor = con.cursor()
 
-    # Adding new values
-    t = (user_key, pk, poll_id, answer, datetime.datetime.now())
-    cursor.execute('insert into blog_poll_values(user_id,post_id,blog_poll_id,value,date) values (?,?,?,?,?)', t)
-    con.commit()
+        # Adding new values
+        t = (user_key, pk, poll_id, answer, datetime.datetime.now())
+        cursor.execute('insert into blog_poll_values(user_id,post_id,blog_poll_id,value,date) values (?,?,?,?,?)', t)
+        con.commit()
 
-    cursor.close()
-    con.close()
+        array = [0, 0, 0, 0, 0]
 
-    return 0
-    # # Reloading the page
-    # return post_detail(request, pk)
+        post_values = pd.read_sql_query("select value, count(value) from (select user_id, "
+            "blog_poll_id, value, max(date) as date from blog_poll_values where "
+            "blog_poll_id="+str(poll_id)+" group by user_id) group by value", con)
+
+        values = post_values['value'].tolist()
+        counts = post_values['count(value)'].tolist()
+
+        for value, count in zip(values, counts):
+            for element in range(0, 5):
+                if value == element + 1:
+                    array[element] = count
+        const = 1
+        # Adding constant to every value
+        array = [x + const for x in array]
+
+        # Counting percentages
+        sum_array = sum(array)
+        if sum_array != 0:
+            for element in range(0, 5):
+                array[element] = int(round(array[element]*100/sum_array))
+
+        # Completing the final array
+        array = list(reversed(array))
+        js_results["id"] = poll_id
+        js_results["values"] = array
+        
+        cursor.close()
+        con.close()            
+        return HttpResponse(
+                json.dumps(js_results),
+                content_type="application/json"
+            )
+    else:
+        return HttpResponse(
+            json.dumps({"error": "Упс, произошла ошибка. Попробуйте перезагрузить страницу!"}),
+            content_type="application/json"
+        )        
+
 
 
 def isNaN(num):
