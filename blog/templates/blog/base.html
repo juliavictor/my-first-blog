@@ -35,27 +35,20 @@
                 {% if user.is_authenticated %}
                 <a title="Профиль" href="{% url 'show_user_profile' %}">
                     <i class="fas fa-user"></i></a>
-                <a title="Выйти" href="{% url 'logout' %}">
+                <a title="Выйти" href="{% url 'logout' %}?next={{request.get_full_path}}">
                     <i class="fas fa-sign-out-alt"></i></a>
                 {% else %}
-                <a title="Войти" href="{% url 'social:begin' 'vk-oauth2' %}">
+                <a title="Войти" href="{% url 'social:begin' 'vk-oauth2' %}?next={{request.get_full_path}}">
                     <i class="fas fa-sign-in-alt"></i></a>
                 {% endif %}
             </div>
         </nav>
     </header>
 
-    <!--<main role="main" class="grid">-->
-
-    <!--</main>-->
-
     <div class="container">
-        <!--<div class="row">-->
-            <!--<div class="col-md-8">-->
             {% block content %}
             {% endblock %}
-            <!--</div>-->
-        <!--</div>-->
+
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>

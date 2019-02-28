@@ -351,7 +351,7 @@ def post_detail(request, pk):
     return render(request, 'blog/post_detail.html',
                   {'post': post, 'posts': posts, 'js_results': js_results,
                    'form': form, 'svg_tag': svg_tag,
-                   'post_comments': post_comments})
+                   'post_comments': post_comments, 'request': request})
 
 
 def svg_avatar(username):

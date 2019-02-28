@@ -49,6 +49,10 @@ header ~ .container {
     margin-top: 80px;
 }
 
+header ~ .main-container {
+    margin-top: 80px;
+}
+
 header .login-buttons {
     float: right;
 }

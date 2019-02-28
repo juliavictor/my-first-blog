@@ -74,7 +74,14 @@
               </li>
             </ul>
            <div class="buttons">
+               {% if user.is_authenticated%}
               <button class="submit" name="poll-{{ poll.id }}" >Проголосовать</button>
+               {% else %}
+               <a class="submit-buttom" title="Войти"
+                  href="{% url 'social:begin' 'vk-oauth2' %}?next={{request.get_full_path}}">
+                   Войдите, чтобы проголосовать
+               </a>
+               {% endif %}
             </div>
           </form>
         </div>
@@ -169,7 +176,7 @@ zingchart.render({
 <br>
 
 
-<p class="detail-rec">Поделиться ссылкой в социальных сетях:</p>
+<!--<p class="detail-rec">Поделиться ссылкой в социальных сетях:</p>-->
 
 <div class="social-media">
 
@@ -208,44 +215,44 @@ document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk
 </div>
 <br>
 
-<div class="social-media small-b">
+<!--<div class="social-media small-b">-->
 
-   <script type="text/javascript"><!--
-document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk }}', title: '{{ post.title }}', image: 'https://www.opinionline.ru/{{ post.image.url }}'},
-{type: "custom", text: "<img src=\"https://vk.com/images/share_32.png\" width=\"21\" height=\"21\" />"}));
---></script>
+   <!--<script type="text/javascript">&lt;!&ndash;-->
+<!--document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk }}', title: '{{ post.title }}', image: 'https://www.opinionline.ru/{{ post.image.url }}'},-->
+<!--{type: "custom", text: "<img src=\"https://vk.com/images/share_32.png\" width=\"21\" height=\"21\" />"}));-->
+<!--&ndash;&gt;</script>-->
 
- <!--{type: "custom", text: "<img src=\"https://vk.com/images/share_32.png\" width=\"32\" height=\"32\" />"} -->
-    <!--{type: "round_nocount", text: "Поделиться"}-->
+ <!--&lt;!&ndash;{type: "custom", text: "<img src=\"https://vk.com/images/share_32.png\" width=\"32\" height=\"32\" />"} &ndash;&gt;-->
+    <!--&lt;!&ndash;{type: "round_nocount", text: "Поделиться"}&ndash;&gt;-->
 
-<a class="twitter-share-button" href="https://twitter.com/intent/tweet"
-  data-text="{{ post.title }}" data-lang="ru" data-url="https://www.opinionline.ru/post/{{ post.pk }}"></a>
+<!--<a class="twitter-share-button" href="https://twitter.com/intent/tweet"-->
+  <!--data-text="{{ post.title }}" data-lang="ru" data-url="https://www.opinionline.ru/post/{{ post.pk }}"></a>-->
 
-<script async defer src="https://connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v3.2&appId=949463291895207"></script>
+<!--<script async defer src="https://connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v3.2&appId=949463291895207"></script>-->
 
-<div id="fb-root2"></div>
-<div class="fb-share-button" data-href="https://www.opinionline.ru/post/{{ post.pk }}" data-layout="button" data-size="small" data-mobile-iframe="true">
-</div>
+<!--<div id="fb-root2"></div>-->
+<!--<div class="fb-share-button" data-href="https://www.opinionline.ru/post/{{ post.pk }}" data-layout="button" data-size="small" data-mobile-iframe="true">-->
+<!--</div>-->
 
-<div id="ok_shareWidget2"></div>
-<script>
-!function (d, id, did, st, title, description, image) {
-  var js = d.createElement("script");
-  js.src = "https://connect.ok.ru/connect.js";
-  js.onload = js.onreadystatechange = function () {
-  if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") {
-    if (!this.executed) {
-      this.executed = true;
-      setTimeout(function () {
-        OK.CONNECT.insertShareWidget(id,did,st, title, description, image);
-      }, 0);
-    }
-  }};
-  d.documentElement.appendChild(js);
-}(document,"ok_shareWidget2","https://www.opinionline.ru/post/{{ post.pk }}",'{"sz":20,"st":"rounded","nc":1,"nt":1}',"{{ post.title }}","","https://www.opinionline.ru/{{ post.image.url }}");
-</script>
-    <!-- или, вместо ..."nc":1,"nt":1}',..."nc":1,"ck":2} -->
-</div>
+<!--<div id="ok_shareWidget2"></div>-->
+<!--<script>-->
+<!--!function (d, id, did, st, title, description, image) {-->
+  <!--var js = d.createElement("script");-->
+  <!--js.src = "https://connect.ok.ru/connect.js";-->
+  <!--js.onload = js.onreadystatechange = function () {-->
+  <!--if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") {-->
+    <!--if (!this.executed) {-->
+      <!--this.executed = true;-->
+      <!--setTimeout(function () {-->
+        <!--OK.CONNECT.insertShareWidget(id,did,st, title, description, image);-->
+      <!--}, 0);-->
+    <!--}-->
+  <!--}};-->
+  <!--d.documentElement.appendChild(js);-->
+<!--}(document,"ok_shareWidget2","https://www.opinionline.ru/post/{{ post.pk }}",'{"sz":20,"st":"rounded","nc":1,"nt":1}',"{{ post.title }}","","https://www.opinionline.ru/{{ post.image.url }}");-->
+<!--</script>-->
+    <!--&lt;!&ndash; или, вместо ..."nc":1,"nt":1}',..."nc":1,"ck":2} &ndash;&gt;-->
+<!--</div>-->
 
 
 
