@@ -14,7 +14,11 @@ morph = pymorphy2.MorphAnalyzer()
 
 # Косинусное расстояние
 def compare_vectors(vec1, vec2):
-    result = 1 - spatial.distance.cosine(vec1, vec2)
+    # Если один из векторов полностью состоит из нулей, возвращаем 0
+    if not np.any(vec1) or not np.any(vec2):
+        result = 0
+    else:
+        result = 1 - spatial.distance.cosine(vec1, vec2)
 
     if math.isnan(result):
         result = 0
