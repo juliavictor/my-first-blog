@@ -76,6 +76,9 @@ def post_list(request):
     if not request.session.session_key:
         request.session.save()
 
+    #
+    # Recommender system 1: content-based
+    #
     posts = form_recommendations(request)
 
     # 1 most popular post
@@ -105,7 +108,205 @@ def post_list(request):
     #     print(request.session.session_key)
 
 
+    #
+    # Recommender system 2: topic-profile-based
+    #
+
+    if logged_with_vk(request):
+        user_vector = user_topic_profile(request)
+
+        # Forming rating of best recommended post for current user
+
+        posts = topic_profile_recommendations(request, user_vector)
+
+
+    # Updating values for shown posts
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_key = get_user_key(request)
+
+    for post in posts:
+        # decrease tag values of shown posts by 0.1
+        cursor.execute("update blog_post_categories set value = value - 0.1"
+                       " where category = " + str(post.tag) +
+                       " and user_id=\"" + str(user_key) + "\"")
+
+        # decrease values of shown posts by 0.1
+        cursor.execute("update blog_post_recs set value = value - 0.1"
+                       " where post_id = " + str(post.pk) +
+                       " and user_id=\"" + str(user_key) + "\"")
+
+        # for TopicProfile-RS
+        if logged_with_vk(request):
+            user_id = request.user.social_auth.values_list("uid")[0][0]
+            cursor.execute("update topic_profile_user_post set weight = weight - 0.4"
+                           " where post_id = " + str(post.pk) +
+                           " and user_id=\"" + str(user_id) + "\"")
+
+    con.commit()
+    cursor.close()
+    con.close()
+
     return render(request, 'blog/post_list.html', {'posts': posts})
+
+
+# Forms list of recommended posts for user
+def topic_profile_recommendations(request, user_vector):
+    user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    # Collecting post weights from database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+    post_weights = pd.read_sql_query("select user_id, post_id, weight from "
+                   "topic_profile_user_post where user_id=\"" + str(user_id) + "\"", con)
+
+    # Updating new posts OR creating rows for new user
+    for post in posts:
+        if post.pk not in post_weights["post_id"].tolist():
+            t = (user_id, post.pk, 10)
+            cursor.execute('insert into topic_profile_user_post(user_id,post_id,weight)'
+                           ' values (?,?,?)', t)
+    con.commit()
+
+    # Loading updated database (once again)
+    post_weights = pd.read_sql_query("select user_id, post_id, weight from "
+                                     "topic_profile_user_post where user_id=\"" + str(user_id) + "\"", con)
+
+    cursor.close()
+    con.close()
+
+    # At this point post_weights MUST be - not post_weights.empty -
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
+    user_post_recs = []
+
+    for post in posts:
+        post_vector = json.loads(post.topic_profile)
+
+        # comparing user & post vector
+        cosine_distance = compare_vectors(user_vector, post_vector)
+        weight = post_weights.loc[post_weights.post_id == post.pk, 'weight'].values[0]
+
+        # forming final rating of posts
+        user_rec = {'post': post, 'value': cosine_distance * weight}
+        user_post_recs.append(user_rec)
+
+    # Sorting posts
+    sorted_recs = sorted(user_post_recs, key=lambda k: k['value'], reverse=True)
+
+    # Forming final list of 9 posts for main page
+    # 3 random from TOP:1-5, 3 random from TOP:6-10, 3 random from TOP:11-20
+    merged_list = random.sample(sorted_recs[0:4], 3) + \
+                  random.sample(sorted_recs[5:9], 3) + \
+                  random.sample(sorted_recs[10:19], 3)
+
+    post_recommends = []
+
+    for element in merged_list:
+        post_recommends.append(element['post'])
+
+    return post_recommends
+
+
+# Checks whether or not current user
+# is logged in using any social network
+def logged_with_vk(request):
+    if request.user.is_authenticated():
+        return request.user.social_auth.exists()
+    else:
+        return False
+
+
+# Builds topic profile for VK user
+def user_topic_profile(request):
+    if not logged_with_vk(request):
+        return 0
+
+    user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    # Check if current user' topic profile is in database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
+                                   "from vk_topic_profiles "
+                                   "where uid=\"" + str(user_id) + "\"", con)
+
+    # If vector for current user exists, fetch it from the database
+    if not user_value.empty:
+        # rs = 1 means we use TopicProfile-RS, rs = 0 means we use content-RS
+        # print(user_value['rs'][0])
+        vector = json.loads(user_value['topic_profile'][0])
+
+    else:
+        # Connecting to VK Api
+        vk_session = vk_api.VkApi(vk_username, vk_password)
+        vk_session.auth()
+
+        vk = vk_session.get_api()
+
+        # Получаем словарь из файла
+        with open(current_catalog() + "dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
+
+        # Получаем список групп пользователя вместе с количеством участников
+        group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
+
+        feed = ""
+
+        # Для каждой группы в цикле проверяем количество участников
+        # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
+        for group in group_list['items']:
+            # print(str(group['id']) + "...")
+            try:
+                members = group['members_count']
+            except KeyError:
+                continue
+
+            if 50 <= members <= 1000000:
+                feed += get_group_wall(vk, group['id'])
+
+        # Строим тематический профиль
+        vector = form_doc_vector(normalize_doc(feed), dictionary, True)
+
+        # Нормализуем его
+        vector = normalize_vector(vector)
+        # print(vector)
+
+        # # Выводим рейтинг наиболее популярных категорий
+        # for line in form_topic_rating(vector, dictionary)[:10]:
+        #     print(line[0] + ": " + str(np.round(line[1],5)))
+
+        # Write new vector to database
+        t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
+        cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
+        con.commit()
+
+    cursor.close()
+    con.close()
+
+    return vector
+
+
+# Downloads the wall of VK group
+def get_group_wall(vk, name):
+    name = '-' + str(name)
+    news_feed = ""
+
+    try:
+        feed = vk.wall.get(owner_id=name, count=100)
+
+    except vk_api.exceptions.ApiError:
+        # print("Пропускаем группу т.к. стена закрыта...")
+        return news_feed
+
+    for post in feed['items']:
+        news_feed += post['text'] + "\n"
+
+    return news_feed
 
 
 def get_user_key(request):
@@ -117,7 +318,7 @@ def get_user_key(request):
 
 
 def form_recommendations(request):
-    # form list of 6 categories
+    # form list of 7 categories
 
     if not request.session.session_key:
         request.session.save()
@@ -133,6 +334,7 @@ def form_recommendations(request):
                                    "user_id=\"" + str(user_key) + "\"", con)
 
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
     # If this user never appeared before
     if user_posts.empty:
         for post in posts:
@@ -148,7 +350,6 @@ def form_recommendations(request):
                 cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
                                ' values (?,?,?,?)', t)
         con.commit()
-
 
     user_cats = pd.read_sql_query("select user_id, category, value from "
                                   "blog_post_categories where "
@@ -187,18 +388,6 @@ def form_recommendations(request):
             # print(post_id)
 
             posts = [x for x in posts] + [y for y in Post.objects.filter(pk=post_id).order_by('?')[:1]]
-
-
-    for post in posts:
-        # decrease tag values of shown posts by 0.1
-        cursor.execute("update blog_post_categories set value = value - 0.1"
-                       " where category = " + str(post.tag) +
-                       " and user_id=\"" + str(user_key) + "\"")
-
-        # decrease values of shown posts by 0.1
-        cursor.execute("update blog_post_recs set value = value - 0.1"
-                       " where post_id = " + str(post.pk) +
-                       " and user_id=\"" + str(user_key) + "\"")
 
     con.commit()
     cursor.close()
@@ -299,6 +488,13 @@ def post_detail(request, pk):
                    " where post_id = " + str(post.pk) +
                    " and user_id=\"" + str(user_key) + "\"")
 
+    # for TopicProfile-RS
+    if logged_with_vk(request):
+        user_id = request.user.social_auth.values_list("uid")[0][0]
+        cursor.execute("update topic_profile_user_post set weight = weight - 2"
+                       " where post_id = " + str(post.pk) +
+                       " and user_id=\"" + str(user_id) + "\"")
+
     con.commit()
     cursor.close()
     con.close()
@@ -315,7 +511,6 @@ def post_detail(request, pk):
     # polls = random.shuffle([i for i in post.polls.all()])
 
     # print(js_results)
-
 
     # Comments section
     if request.method == "POST":
@@ -373,8 +568,6 @@ def form_username(user):
         else:
             user_name = str(user)
     return user_name
-
-
 
 
 def submit_poll(request, pk, answer, poll_id):
@@ -514,121 +707,6 @@ def show_user_profile(request):
 
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
                                                       'user_name': user_name})
-
-
-# Forms list of recommended posts for user
-def topic_profile_recommendations(user_vector):
-    # Once again loading all posts
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
-
-    user_post_recs = []
-
-    for post in posts:
-        if len(post.quotes.all()) == 0:
-            continue
-
-        post_vector = json.loads(post.topic_profile)
-
-        user_rec = {'post': post, 'value': compare_vectors(user_vector, post_vector)}
-        user_post_recs.append(user_rec)
-
-    # Sorting posts
-    sorted_recs = sorted(user_post_recs, key=lambda k: k['value'], reverse=True)
-
-    return sorted_recs
-
-
-# Checks whether or not current user
-# is logged in using any social network
-def logged_with_vk(request):
-    return request.user.social_auth.exists()
-
-
-# Downloads the wall of VK group
-def get_group_wall(vk, name):
-    name = '-' + str(name)
-    news_feed = ""
-
-    try:
-        feed = vk.wall.get(owner_id=name, count=100)
-
-    except vk_api.exceptions.ApiError:
-        # print("Пропускаем группу т.к. стена закрыта...")
-        return news_feed
-
-    for post in feed['items']:
-        news_feed += post['text'] + "\n"
-
-    return news_feed
-
-
-# Builds topic profile for VK user
-def user_topic_profile(request):
-    if not logged_with_vk(request):
-        return 0
-
-    user_id = request.user.social_auth.values_list("uid")[0][0]
-
-    # Check if current user' topic profile is in database
-    con = connect_to_database()
-    cursor = con.cursor()
-
-    user_value = pd.read_sql_query("select uid, topic_profile, date "
-                                   "from vk_topic_profiles "
-                                   "where uid=\"" + str(user_id) + "\"", con)
-
-    # If vector for current user exists, fetch it from the database
-    if not user_value.empty:
-        vector = json.loads(user_value['topic_profile'][0])
-
-    else:
-        # Connecting to VK Api
-        vk_session = vk_api.VkApi(vk_username, vk_password)
-        vk_session.auth()
-
-        vk = vk_session.get_api()
-
-        # Получаем словарь из файла
-        with open(current_catalog() + "dict.json", "r") as read_file:
-            dictionary = json.load(read_file)
-
-        # Получаем список групп пользователя вместе с количеством участников
-        group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
-
-        feed = ""
-
-        # Для каждой группы в цикле проверяем количество участников
-        # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
-        for group in group_list['items']:
-            # print(str(group['id']) + "...")
-            try:
-                members = group['members_count']
-            except KeyError:
-                continue
-
-            if 50 <= members <= 1000000:
-                feed += get_group_wall(vk, group['id'])
-
-        # Строим тематический профиль
-        vector = form_doc_vector(normalize_doc(feed), dictionary, True)
-
-        # Нормализуем его
-        vector = normalize_vector(vector)
-        # print(vector)
-
-        # # Выводим рейтинг наиболее популярных категорий
-        # for line in form_topic_rating(vector, dictionary)[:10]:
-        #     print(line[0] + ": " + str(np.round(line[1],5)))
-
-        # Write new vector to database
-        t = (user_id, json.dumps(vector), datetime.datetime.now())
-        cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date) values (?,?,?)', t)
-        con.commit()
-
-    cursor.close()
-    con.close()
-
-    return vector
 
 
 # On post save, call topic_profile_rebuild
