@@ -169,8 +169,8 @@ def form_recommendations(request):
         # sorting categories list by descending order
         user_cats = user_cats.sort_values('value', ascending=False)
 
-        # selecting top 6 categories for this user
-        cat_list = user_cats['category'][:6].tolist()
+        # selecting top 7 categories for this user
+        cat_list = user_cats['category'][:7].tolist()
         shuffle(cat_list)
 
         posts = []
@@ -423,9 +423,9 @@ def submit_poll(request, pk, answer, poll_id):
         array = list(reversed(array))
         js_results["id"] = poll_id
         js_results["values"] = array
-        
+
         cursor.close()
-        con.close()            
+        con.close()
         return HttpResponse(
                 json.dumps(js_results),
                 content_type="application/json"
@@ -434,7 +434,7 @@ def submit_poll(request, pk, answer, poll_id):
         return HttpResponse(
             json.dumps({"error": "Упс, произошла ошибка. Попробуйте перезагрузить страницу!"}),
             content_type="application/json"
-        )        
+        )
 
 
 
