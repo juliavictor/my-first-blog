@@ -103,7 +103,7 @@ a:focus {
     background: radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));
     background: -webkit-radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));
     background: -moz-radial-gradient(rgba(0, 0, 0, 0.6),rgba(0, 0, 0, 0.65));*/
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-weight: 300;
     font-size: 10pt;
     /*color: white;*/
@@ -145,6 +145,8 @@ a, a:visited, a:hover {
 .descript {
     float: right;
     font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
+
     font-style: italic;
     font-size: 10pt;
 }
@@ -661,11 +663,26 @@ blog-comment::before,
 
 .social-media * {
     float: left;
+    text-align: left;
+}
+
+
+@media (max-width:450px) {
+    .social-media * {
+    float: none;
+}
+
 }
 
 .social-media :not(:first-child) {
     margin-right: 3px;
+
 }
+
+.social-media * {
+    margin-bottom: 2px;
+}
+
 
 hr {
     clear: both;
