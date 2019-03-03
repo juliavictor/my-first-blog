@@ -688,3 +688,33 @@ hr {
     clear: both;
 }
 
+/* Masonry Grid Ajax Endless Pagination */
+
+.masonry-grid:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+.grid-sizer,
+.grid-item {
+  width: 32%;
+}
+
+.gutter-sizer {
+  width: 2%;
+}
+.grid-item {
+  float: left;
+  margin-bottom: .75rem;
+  opacity: 0;
+}
+
+.grid-item img {
+  display: block;
+  width: 100%;
+}
+
+.endless_container {
+  display: none;
+}

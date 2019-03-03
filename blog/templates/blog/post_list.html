@@ -1,26 +1,65 @@
 {% extends 'blog/base4.html' %}
+{% load staticfiles%}
+
+{% block js %}
+   <script src="http://code.jquery.com/jquery-latest.js"></script>
+   <script src="{% static '/js/el-pagination.js' %}"></script>
+   <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.js"></script>
+   <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.js"></script>
+{% endblock %}
+
 {% block content %}
-
-<div class="container">
-   <div class="card-columns">
-
-      {% for post in posts %}
-      <div class="card">
-         <a href="{% url 'post_detail' pk=post.pk %}" >
-            <img src="{{ post.image.url }}" class="card-img img-fluid"/>
-            <div class="card-body">
-                 <div class="card-title"> {{ post.title }} </div>
+      <div class="container">
+            <div class="masonry-grid">
+                  <div class="grid-sizer"></div>
+                  <div class="gutter-sizer"></div>
+                  <!-- Include post_list_page.html for infnite scroll -->
+                  {% include page_template %}
+                </div>
             </div>
-         </a>
-      </div>
+{% block extrajs %}
+      <script>
+         // Animation on load for .grid-item's
+         $(document).ready(function( $ ) {
+            $('.grid-item').each(function(){
+               $(this).delay(25).fadeTo(250, 1);
+            });
+         });
 
-      {% endfor %}
+         // Masonry grid on imagesLoaded()
+         var $grid = $('.masonry-grid').imagesLoaded( function() {
+            $grid.masonry({
+               itemSelector: '.grid-item',
+               percentPosition: true,
+               columnWidth: '.grid-sizer',
+               gutter: '.gutter-sizer',
+               transitionDuration: 0 
+            }); 
+         });
 
-   </div>
-</div>
-
-<a class="refresh" href="." id="refresh">
-    <span class="glyphicon glyphicon-refresh"></span>
-</a>
+         // Django-El-Pagination          
+         $.endlessPaginate({
+             paginateOnScroll: true,
+             paginateOnScrollChunkSize: 12,
+             // Refresh layout of masonry grid when pagination onCompleted()
+             onCompleted: function(context, fragment) {
+               $(document).ready(function () {
+                     var masonryGrid = $('.masonry-grid');
+                     masonryGrid.imagesLoaded(function () {
+                        var masonry = masonryGrid.data('masonry');
+                        if (masonry !== undefined) {
+                           masonry.reloadItems();
+                           masonry.layout();
+                        }
+                        // Animation on refresh for .grid-item's
+                        $('.grid-item').each(function(){
+                              $(this).delay(25).fadeTo(250, 1);
+                        });
+                     });
+               });
+            }   
+         });
+     </script>
+{% endblock %}
 
 {% endblock content %}

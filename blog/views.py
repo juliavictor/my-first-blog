@@ -5,6 +5,7 @@ from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from el_pagination.decorators import page_template
 from random import shuffle
 import pandas as pd
 import numpy as np
@@ -71,84 +72,89 @@ def write_file(df, name):
         file = df.to_csv('/home/juliavictor/my-first-blog/'+name,
                     encoding='utf-8', index=False)
 
+@page_template('blog/post_list_page.html')
+def post_list(request, template='blog/post_list.html', extra_context=None):
 
-def post_list(request):
-    if not request.session.session_key:
-        request.session.save()
+    context = {
+        'entry_list': Post.objects.all(),
+    }
+    if extra_context is not None:
+        context.update(extra_context)
 
+    return render(request, template, context)
     #
     # Recommender system 1: content-based
     #
-    posts = form_recommendations(request)
+    # posts = form_recommendations(request)
 
-    # 1 most popular post
-    pop_post = Post.objects
-    for post in posts:
-        pop_post = pop_post.exclude(id=str(post.pk))
-    pop_post = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
+    # # 1 most popular post
+    # pop_post = Post.objects
+    # for post in posts:
+    #     pop_post = pop_post.exclude(id=str(post.pk))
+    # pop_post = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
 
-    posts = [x for x in posts] + \
-            [y for y in random_value(pop_post)]
+    # posts = [x for x in posts] + \
+    #         [y for y in random_value(pop_post)]
 
-    # 1 newest post
-    new_post = Post.objects
-    for post in posts:
-        new_post = new_post.exclude(id=str(post.pk))
-    new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
-    posts = [x for x in posts] + \
-            [z for z in random_value(new_post)]
+    # # 1 newest post
+    # new_post = Post.objects
+    # for post in posts:
+    #     new_post = new_post.exclude(id=str(post.pk))
+    # new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
+    # posts = [x for x in posts] + \
+    #         [z for z in random_value(new_post)]
 
-    # # For debug
-    # if request.user.is_authenticated():
-    #     print(request.user)
-    #     print(request.user.id)
-    #     print(request.user.first_name)
-    #     print(request.user.last_name)
-    # else:
-    #     print(request.session.session_key)
-
-
-    #
-    # Recommender system 2: topic-profile-based
-    #
-
-    if logged_with_vk(request):
-        user_vector = user_topic_profile(request)
-
-        # Forming rating of best recommended post for current user
-
-        posts = topic_profile_recommendations(request, user_vector)
+    # # # For debug
+    # # if request.user.is_authenticated():
+    # #     print(request.user)
+    # #     print(request.user.id)
+    # #     print(request.user.first_name)
+    # #     print(request.user.last_name)
+    # # else:
+    # #     print(request.session.session_key)
 
 
-    # Updating values for shown posts
-    con = connect_to_database()
-    cursor = con.cursor()
+    # #
+    # # Recommender system 2: topic-profile-based
+    # #
 
-    user_key = get_user_key(request)
+    # if logged_with_vk(request):
+    #     user_vector = user_topic_profile(request)
 
-    for post in posts:
-        # decrease tag values of shown posts by 0.1
-        cursor.execute("update blog_post_categories set value = value - 0.1"
-                       " where category = " + str(post.tag) +
-                       " and user_id=\"" + str(user_key) + "\"")
+    #     # Forming rating of best recommended post for current user
 
-        # decrease values of shown posts by 0.1
-        cursor.execute("update blog_post_recs set value = value - 0.1"
-                       " where post_id = " + str(post.pk) +
-                       " and user_id=\"" + str(user_key) + "\"")
+    #     posts = topic_profile_recommendations(request, user_vector)
 
-        # for TopicProfile-RS
-        if logged_with_vk(request):
-            user_id = request.user.social_auth.values_list("uid")[0][0]
-            cursor.execute("update topic_profile_user_post set weight = weight - 0.4"
-                           " where post_id = " + str(post.pk) +
-                           " and user_id=\"" + str(user_id) + "\"")
 
-    con.commit()
-    cursor.close()
-    con.close()
+    # # Updating values for shown posts
+    # con = connect_to_database()
+    # cursor = con.cursor()
 
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    # user_key = get_user_key(request)
+
+    # for post in posts:
+    #     # decrease tag values of shown posts by 0.1
+    #     cursor.execute("update blog_post_categories set value = value - 0.1"
+    #                    " where category = " + str(post.tag) +
+    #                    " and user_id=\"" + str(user_key) + "\"")
+
+    #     # decrease values of shown posts by 0.1
+    #     cursor.execute("update blog_post_recs set value = value - 0.1"
+    #                    " where post_id = " + str(post.pk) +
+    #                    " and user_id=\"" + str(user_key) + "\"")
+
+    #     # for TopicProfile-RS
+    #     if logged_with_vk(request):
+    #         user_id = request.user.social_auth.values_list("uid")[0][0]
+    #         cursor.execute("update topic_profile_user_post set weight = weight - 0.4"
+    #                        " where post_id = " + str(post.pk) +
+    #                        " and user_id=\"" + str(user_id) + "\"")
+
+    # con.commit()
+    # cursor.close()
+    # con.close()
+
+    # return render(request, 'blog/post_list.html', {'posts': posts})
 
 
 # Forms list of recommended posts for user
