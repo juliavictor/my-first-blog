@@ -1,0 +1,16 @@
+{% load el_pagination_tags %}
+
+{% paginate 12 entry_list %}
+{% for post in entry_list %}
+<div class="grid-item">
+      <div class="card">
+         <a href="{% url 'post_detail' pk=post.pk %}" >
+            <img src="{{ post.image.url }}" class="card-img img-fluid"/>
+            <div class="card-body">
+                 <div class="card-title"> {{ post.title }} </div>
+            </div>
+         </a>
+      </div>
+   </div>      
+{% endfor %}
+{% show_more %}
