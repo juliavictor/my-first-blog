@@ -23,6 +23,7 @@ import avinit
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .models import Post, Quote, QuoteInline
+from numpy.random import choice
 
 
 def current_catalog():
@@ -43,6 +44,9 @@ def connect_to_database():
 
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):
+    if len(posts) == 0:
+        return []
+
     un_posts = Post.objects
     top_posts = Post.objects
 
@@ -72,58 +76,24 @@ def write_file(df, name):
         file = df.to_csv('/home/juliavictor/my-first-blog/'+name,
                     encoding='utf-8', index=False)
 
+
 @page_template('blog/post_list_page.html')
 def post_list(request, template='blog/post_list.html', extra_context=None):
 
-    context = {
-        'entry_list': Post.objects.all(),
-    }
-    if extra_context is not None:
-        context.update(extra_context)
-
-    return render(request, template, context)
     #
     # Recommender system 1: content-based
     #
-    # posts = form_recommendations(request)
+    posts = form_feed_content_recs(request)
 
-    # # 1 most popular post
-    # pop_post = Post.objects
-    # for post in posts:
-    #     pop_post = pop_post.exclude(id=str(post.pk))
-    # pop_post = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
+    #
+    # Recommender system 2: topic-profile-based
+    #
 
-    # posts = [x for x in posts] + \
-    #         [y for y in random_value(pop_post)]
+    if logged_with_vk(request):
+        user_vector = user_topic_profile(request)
 
-    # # 1 newest post
-    # new_post = Post.objects
-    # for post in posts:
-    #     new_post = new_post.exclude(id=str(post.pk))
-    # new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
-    # posts = [x for x in posts] + \
-    #         [z for z in random_value(new_post)]
-
-    # # # For debug
-    # # if request.user.is_authenticated():
-    # #     print(request.user)
-    # #     print(request.user.id)
-    # #     print(request.user.first_name)
-    # #     print(request.user.last_name)
-    # # else:
-    # #     print(request.session.session_key)
-
-
-    # #
-    # # Recommender system 2: topic-profile-based
-    # #
-
-    # if logged_with_vk(request):
-    #     user_vector = user_topic_profile(request)
-
-    #     # Forming rating of best recommended post for current user
-
-    #     posts = topic_profile_recommendations(request, user_vector)
+        # Forming rating of best recommended post for current user
+        posts = topic_profile_recommendations(request, user_vector)
 
 
     # # Updating values for shown posts
@@ -154,7 +124,20 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # cursor.close()
     # con.close()
 
-    # return render(request, 'blog/post_list.html', {'posts': posts})
+
+    # Forming a list of recommended posts
+    context = {
+        'entry_list': posts,
+    }
+    if extra_context is not None:
+        context.update(extra_context)
+
+
+    # Check for duplicates
+    # print(context['entry_list'][:10])
+    # print(len(context['entry_list']) != len(set(context['entry_list'])))
+
+    return render(request, template, context)
 
 
 # Forms list of recommended posts for user
@@ -188,6 +171,9 @@ def topic_profile_recommendations(request, user_vector):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
 
     user_post_recs = []
+    # for the rest of the feed
+    feed_posts = []
+    feed_probab = []
 
     for post in posts:
         post_vector = json.loads(post.topic_profile)
@@ -198,6 +184,10 @@ def topic_profile_recommendations(request, user_vector):
 
         # forming final rating of posts
         user_rec = {'post': post, 'value': cosine_distance * weight}
+
+        feed_posts.append(post)
+        feed_probab.append(cosine_distance * weight)
+
         user_post_recs.append(user_rec)
 
     # Sorting posts
@@ -214,7 +204,18 @@ def topic_profile_recommendations(request, user_vector):
     for element in merged_list:
         post_recommends.append(element['post'])
 
-    return post_recommends
+    print(post_recommends)
+
+    # The rest of the feed with some probability
+    feed = choice(feed_posts, 1000, p=normalize_vector_full(feed_probab))
+
+    # Excluding duplicates
+    feed = list(set(feed))
+
+    # Excluding top 9 posts form the feed
+    rest_of_feed = [x for x in feed if x not in post_recommends]
+
+    return post_recommends + rest_of_feed
 
 
 # Checks whether or not current user
@@ -323,8 +324,52 @@ def get_user_key(request):
     return str(user_key)
 
 
-def form_recommendations(request):
+def form_feed_content_recs(request):
+    post_list = form_nine_content_recs(request, [])
+    new_list = post_list
+
+    # while len(new_list) > 0:
+    while len(post_list) < 50:
+        new_list = form_nine_content_recs(request, post_list)
+        post_list += new_list
+        # print(len(new_list))
+
+    return post_list
+
+
+def form_nine_content_recs(request, post_list):
+    posts = form_recommendations(request, post_list)
+
+    # 1 most popular post
+    pop_post = Post.objects
+    for post in posts:
+        pop_post = pop_post.exclude(id=str(post.pk))
+    for post in post_list:
+        pop_post = pop_post.exclude(id=str(post.pk))
+    pop_post = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
+
+    posts = [x for x in posts] + \
+            [y for y in random_value(pop_post)]
+
+    # 1 newest post
+    new_post = Post.objects
+    for post in posts:
+        new_post = new_post.exclude(id=str(post.pk))
+    for post in post_list:
+        new_post = new_post.exclude(id=str(post.pk))
+    new_post = new_post.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
+    posts = [x for x in posts] + \
+            [z for z in random_value(new_post)]
+
+    return posts
+
+
+
+def form_recommendations(request, post_list):
     # form list of 7 categories
+    post_list_ids = []
+    for post in post_list:
+        post_list_ids.append(post.pk)
 
     if not request.session.session_key:
         request.session.save()
@@ -369,8 +414,12 @@ def form_recommendations(request):
                           ' values (?,?,?)', t)
         con.commit()
 
-        # show 6 most popular posts
-        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')[:6]
+        # show 7 most popular posts
+        pop_post = Post.objects
+        for post in post_list:
+            pop_post = pop_post.exclude(id=str(post.pk))
+        posts = pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
+
 
     else:
         # sorting categories list by descending order
@@ -380,15 +429,27 @@ def form_recommendations(request):
         cat_list = user_cats['category'][:7].tolist()
         shuffle(cat_list)
 
+        cat_list = list(set(cat_list))
+
         posts = []
-        # print("List of categories:")
-        # print(cat_list)
+
         for category in cat_list:
             # selecting 1 best post from each category
-            cursor.execute("select post_id, max(value) as date from blog_post_recs "
+            cursor.execute("select post_id, value from blog_post_recs "
                            "where category=" + str(category) +
-                           " and user_id=\"" + str(user_key) + "\"")
-            post_id = cursor.fetchone()[0]
+                           " and user_id=\"" + str(user_key) +
+                           "\" order by value")
+            post_ids = cursor.fetchall()
+
+            post_id = -1
+
+            for id in post_ids:
+                if id[0] not in post_list_ids:
+                    post_id = id[0]
+                    break
+
+            if post_id == -1:
+                continue
 
             # print("Best post from category: "+str(category))
             # print(post_id)
