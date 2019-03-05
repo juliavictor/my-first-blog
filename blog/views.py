@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from el_pagination.decorators import page_template
+from el_pagination import utils
 from random import shuffle
 import pandas as pd
 import numpy as np
@@ -83,17 +84,27 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     #
     # Recommender system 1: content-based
     #
-    posts = form_feed_content_recs(request)
+
+    # Remove session key on 1 page after reload
+    if not request.is_ajax() and request.session.get("post_list"):
+        del request.session['post_list']
+
+    # Add session key for pagination without reloading new content
+    if not request.session.get("post_list"):
+        request.session['post_list'] = form_feed_content_recs(request)
+
+    # Get objects of posts from session
+    posts = request.session.get('post_list')
 
     #
     # Recommender system 2: topic-profile-based
     #
 
-    if logged_with_vk(request):
-        user_vector = user_topic_profile(request)
+    # if logged_with_vk(request):
+    #     user_vector = user_topic_profile(request)
 
-        # Forming rating of best recommended post for current user
-        posts = topic_profile_recommendations(request, user_vector)
+    #     # Forming rating of best recommended post for current user
+    #     posts = topic_profile_recommendations(request, user_vector)
 
 
     # # Updating values for shown posts
@@ -125,17 +136,18 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # con.close()
 
 
-    # Forming a list of recommended posts
+    # Formate a list of recommended posts
     context = {
         'entry_list': posts,
     }
+
     if extra_context is not None:
         context.update(extra_context)
-
-
-    # Check for duplicates
-    # print(context['entry_list'][:10])
-    # print(len(context['entry_list']) != len(set(context['entry_list'])))
+    
+    # Remove session on last page 
+    # Page N5 - is last page in our project
+    page = utils.get_page_number_from_request(request)
+    if page == 5: del request.session['post_list']
 
     return render(request, template, context)
 

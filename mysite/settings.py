@@ -164,3 +164,5 @@ os.path.join(BASE_DIR, 'images')
 )
 
 MEDIA_URL = '/media/'
+
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
