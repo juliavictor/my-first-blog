@@ -325,7 +325,19 @@ def load_user_vk_vector(user_id, group_limit=None):
 
     # Нормализуем его
     vector = normalize_vector(vector)
-    # print(vector)
+    print(vector)
+
+    if group_limit is None:
+        # Write new vector to database
+        con = connect_to_database()
+        cursor = con.cursor()
+
+        cursor.execute("update vk_topic_profiles set topic_profile = \""
+                       + json.dumps(vector) + "\" where uid=" + str(user_id))
+
+        con.commit()
+        cursor.close()
+        con.close()
 
     # # Выводим рейтинг наиболее популярных категорий
     # for line in form_topic_rating(vector, dictionary)[:10]:
