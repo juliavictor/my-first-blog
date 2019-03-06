@@ -56,6 +56,13 @@ def normalize_vector(vec):
     return norm_vec
 
 
+def normalize_vector_full(vec):
+    if sum(vec) == 0:
+        return vec
+    ratio = 1 / sum(vec)
+    norm_vec = [(i * ratio) for i in vec]
+    return norm_vec
+
 # Подсчет количества упоминаний ключевого слова в словаре
 def count_keyword_in_dict(keyword, dictionary):
     count = 0

@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'blog',
-    'social_django', # <--
+    'social_django',
+    'el_pagination' # <--
 ]
 
 MIDDLEWARE = [
@@ -163,3 +164,5 @@ os.path.join(BASE_DIR, 'images')
 )
 
 MEDIA_URL = '/media/'
+
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
