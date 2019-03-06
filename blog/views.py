@@ -25,6 +25,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .models import Post, Quote, QuoteInline
 from numpy.random import choice
+import threading
 
 
 def current_catalog():
@@ -145,11 +146,12 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     
     # Remove session on last page 
     page = utils.get_page_number_from_request(request)
+    # print("I'm on page " + str(page))
     page = page - 1
 
-    # print("Current shown posts: ")
-    # print(posts[page:page+8])
 
+    # print("Current shown posts: ")
+    # print(posts[page*9:page*9+8])
 
     return render(request, template, context)
 
@@ -218,7 +220,7 @@ def topic_profile_recommendations(request, user_vector):
     for element in merged_list:
         post_recommends.append(element['post'])
 
-    print(post_recommends)
+    # print(post_recommends)
 
     # The rest of the feed with some probability
     feed = choice(feed_posts, 1000, p=normalize_vector_full(feed_probab))
@@ -263,43 +265,12 @@ def user_topic_profile(request):
         vector = json.loads(user_value['topic_profile'][0])
 
     else:
-        # Connecting to VK Api
-        vk_session = vk_api.VkApi(vk_username, vk_password)
-        vk_session.auth()
+        # building topic profile by shortened group list
+        vector = load_user_vk_vector(user_id, 2)
 
-        vk = vk_session.get_api()
-
-        # Получаем словарь из файла
-        with open(current_catalog() + "dict.json", "r") as read_file:
-            dictionary = json.load(read_file)
-
-        # Получаем список групп пользователя вместе с количеством участников
-        group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
-
-        feed = ""
-
-        # Для каждой группы в цикле проверяем количество участников
-        # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
-        for group in group_list['items']:
-            # print(str(group['id']) + "...")
-            try:
-                members = group['members_count']
-            except KeyError:
-                continue
-
-            if 50 <= members <= 1000000:
-                feed += get_group_wall(vk, group['id'])
-
-        # Строим тематический профиль
-        vector = form_doc_vector(normalize_doc(feed), dictionary, True)
-
-        # Нормализуем его
-        vector = normalize_vector(vector)
-        # print(vector)
-
-        # # Выводим рейтинг наиболее популярных категорий
-        # for line in form_topic_rating(vector, dictionary)[:10]:
-        #     print(line[0] + ": " + str(np.round(line[1],5)))
+        # # and starting async function
+        download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
+        download_thread.start()
 
         # Write new vector to database
         t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
@@ -309,6 +280,58 @@ def user_topic_profile(request):
     cursor.close()
     con.close()
 
+    return vector
+
+
+def load_user_vk_vector(user_id, group_limit=None):
+    print("load_user_vk_vector start")
+
+    # Connecting to VK Api
+    vk_session = vk_api.VkApi(vk_username, vk_password)
+    vk_session.auth()
+
+    vk = vk_session.get_api()
+
+    # Получаем словарь из файла
+    with open(current_catalog() + "dict.json", "r") as read_file:
+        dictionary = json.load(read_file)
+
+    # Получаем список групп пользователя вместе с количеством участников
+    group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
+
+    feed = ""
+
+    # Ограничение на количество групп
+    if group_limit is None:
+        group_array = group_list['items']
+    else:
+        group_array = group_list['items'][0:group_limit]
+
+    # Для каждой группы в цикле проверяем количество участников
+    # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
+    for group in group_array:
+        # print(str(group['id']) + "...")
+        try:
+            members = group['members_count']
+        except KeyError:
+            continue
+
+
+        if 50 <= members <= 1000000:
+            feed += get_group_wall(vk, group['id'])
+
+    # Строим тематический профиль
+    vector = form_doc_vector(normalize_doc(feed), dictionary, True)
+
+    # Нормализуем его
+    vector = normalize_vector(vector)
+    # print(vector)
+
+    # # Выводим рейтинг наиболее популярных категорий
+    # for line in form_topic_rating(vector, dictionary)[:10]:
+    #     print(line[0] + ": " + str(np.round(line[1],5)))
+
+    print("load_user_vk_vector end " + str(len(group_array)))
     return vector
 
 
