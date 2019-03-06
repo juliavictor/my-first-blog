@@ -16,7 +16,7 @@ from pathlib import Path
 import sqlite3
 import datetime
 import vk_api
-from .auth_info import vk_username, vk_password
+from .settings import vk_username, vk_password, home_path
 from .topic_profile import *
 import os
 from django.template import RequestContext
@@ -28,7 +28,7 @@ from numpy.random import choice
 
 
 def current_catalog():
-    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+    if os.getcwd() == home_path:
         return ""
     else:
         return "proetcontra/"
@@ -36,7 +36,7 @@ def current_catalog():
 
 def connect_to_database():
     # print(os.getcwd())
-    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+    if os.getcwd() == home_path:
         con = sqlite3.connect('db.sqlite3', timeout=10)
     else:
         con = sqlite3.connect('proetcontra/db.sqlite3', timeout=10)
@@ -81,30 +81,29 @@ def write_file(df, name):
 @page_template('blog/post_list_page.html')
 def post_list(request, template='blog/post_list.html', extra_context=None):
 
-    #
-    # Recommender system 1: content-based
-    #
-
     # Remove session key on 1 page after reload
     if not request.is_ajax() and request.session.get("post_list"):
         del request.session['post_list']
 
     # Add session key for pagination without reloading new content
     if not request.session.get("post_list"):
-        request.session['post_list'] = form_feed_content_recs(request)
+        # Recommender system 1: content-based
+        if not logged_with_vk(request):
+            print("not logged with vk: form_feed_content_recs")
+            request.session['post_list'] = form_feed_content_recs(request)
+
+        # Recommender system 2: topic-profile-based
+        else:
+            print("logged with vk: topic_profile_recommendations")
+
+            user_vector = user_topic_profile(request)
+
+            # Forming rating of best recommended post for current user
+            request.session['post_list'] = topic_profile_recommendations(request, user_vector)
+
 
     # Get objects of posts from session
     posts = request.session.get('post_list')
-
-    #
-    # Recommender system 2: topic-profile-based
-    #
-
-    # if logged_with_vk(request):
-    #     user_vector = user_topic_profile(request)
-
-    #     # Forming rating of best recommended post for current user
-    #     posts = topic_profile_recommendations(request, user_vector)
 
 
     # # Updating values for shown posts
@@ -136,7 +135,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # con.close()
 
 
-    # Formate a list of recommended posts
+    # Form a list of recommended posts
     context = {
         'entry_list': posts,
     }
@@ -145,9 +144,12 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
         context.update(extra_context)
     
     # Remove session on last page 
-    # Page N5 - is last page in our project
     page = utils.get_page_number_from_request(request)
-    if page == 5: del request.session['post_list']
+    page = page - 1
+
+    # print("Current shown posts: ")
+    # print(posts[page:page+8])
+
 
     return render(request, template, context)
 
@@ -439,9 +441,8 @@ def form_recommendations(request, post_list):
 
         # selecting top 7 categories for this user
         cat_list = user_cats['category'][:7].tolist()
-        shuffle(cat_list)
-
         cat_list = list(set(cat_list))
+        shuffle(cat_list)
 
         posts = []
 
@@ -814,7 +815,7 @@ def poll_handler(instance, **kwargs):
 
 # Rebuilds topic profiles for selected posts
 def post_topic_profile(posts):
-    if os.getcwd() == "C:\\Users\\Yulia\\proetcontra":
+    if os.getcwd() == home_path:
         with open("dict.json", "r") as read_file:
             dictionary = json.load(read_file)
     else:
