@@ -11,3 +11,4 @@ django.wsgi
 blog/auth_info.py
 db.sqlite3
 src/django-nested-inlines/
+blog/settings.py
