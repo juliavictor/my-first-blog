@@ -701,6 +701,13 @@ hr {
   width: 32%;
 }
 
+@media (max-width:767px) {
+.grid-sizer,
+.grid-item {
+  width: 96%;
+}
+}
+
 .gutter-sizer {
   width: 2%;
 }
