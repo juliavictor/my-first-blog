@@ -84,6 +84,12 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
 
     # Remove session key on 1 page after reload
     if not request.is_ajax() and request.session.get("post_list"):
+        # If current user has loaded the main page at least once
+        if request.session.get("page_num"):
+            page = request.session['page_num'] - 1
+            last_shown_posts = request.session['post_list'][0:page*9+8]
+            decrease_shown_posts_rec(request, last_shown_posts)
+
         del request.session['post_list']
 
     # Add session key for pagination without reloading new content
@@ -106,36 +112,6 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # Get objects of posts from session
     posts = request.session.get('post_list')
 
-
-    # # Updating values for shown posts
-    # con = connect_to_database()
-    # cursor = con.cursor()
-
-    # user_key = get_user_key(request)
-
-    # for post in posts:
-    #     # decrease tag values of shown posts by 0.1
-    #     cursor.execute("update blog_post_categories set value = value - 0.1"
-    #                    " where category = " + str(post.tag) +
-    #                    " and user_id=\"" + str(user_key) + "\"")
-
-    #     # decrease values of shown posts by 0.1
-    #     cursor.execute("update blog_post_recs set value = value - 0.1"
-    #                    " where post_id = " + str(post.pk) +
-    #                    " and user_id=\"" + str(user_key) + "\"")
-
-    #     # for TopicProfile-RS
-    #     if logged_with_vk(request):
-    #         user_id = request.user.social_auth.values_list("uid")[0][0]
-    #         cursor.execute("update topic_profile_user_post set weight = weight - 0.4"
-    #                        " where post_id = " + str(post.pk) +
-    #                        " and user_id=\"" + str(user_id) + "\"")
-
-    # con.commit()
-    # cursor.close()
-    # con.close()
-
-
     # Form a list of recommended posts
     context = {
         'entry_list': posts,
@@ -146,14 +122,41 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     
     # Remove session on last page 
     page = utils.get_page_number_from_request(request)
-    # print("I'm on page " + str(page))
-    page = page - 1
-
-
-    # print("Current shown posts: ")
-    # print(posts[page*9:page*9+8])
+    request.session['page_num'] = page
 
     return render(request, template, context)
+
+
+def decrease_shown_posts_rec(request, posts):
+    # Updating values for shown posts
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_key = get_user_key(request)
+
+    for post in posts:
+        # decrease tag values of shown posts by 0.1
+        cursor.execute("update blog_post_categories set value = value - 0.1"
+                       " where category = " + str(post.tag) +
+                       " and user_id=\"" + str(user_key) + "\"")
+
+        # decrease values of shown posts by 0.1
+        cursor.execute("update blog_post_recs set value = value - 0.1"
+                       " where post_id = " + str(post.pk) +
+                       " and user_id=\"" + str(user_key) + "\"")
+
+        # for TopicProfile-RS
+        if logged_with_vk(request):
+            user_id = request.user.social_auth.values_list("uid")[0][0]
+            cursor.execute("update topic_profile_user_post set weight = weight - 0.4"
+                           " where post_id = " + str(post.pk) +
+                           " and user_id=\"" + str(user_id) + "\"")
+
+    con.commit()
+    cursor.close()
+    con.close()
+
+    return 0
 
 
 # Forms list of recommended posts for user
@@ -284,7 +287,7 @@ def user_topic_profile(request):
 
 
 def load_user_vk_vector(user_id, group_limit=None):
-    print("load_user_vk_vector start")
+    # print("load_user_vk_vector start")
 
     # Connecting to VK Api
     vk_session = vk_api.VkApi(vk_username, vk_password)
@@ -325,7 +328,7 @@ def load_user_vk_vector(user_id, group_limit=None):
 
     # Нормализуем его
     vector = normalize_vector(vector)
-    print(vector)
+    # print(vector)
 
     if group_limit is None:
         # Write new vector to database
@@ -343,7 +346,7 @@ def load_user_vk_vector(user_id, group_limit=None):
     # for line in form_topic_rating(vector, dictionary)[:10]:
     #     print(line[0] + ": " + str(np.round(line[1],5)))
 
-    print("load_user_vk_vector end " + str(len(group_array)))
+    # print("load_user_vk_vector end " + str(len(group_array)))
     return vector
 
 
