@@ -23,8 +23,11 @@
 
     <!-- VK social media sharing -->
     <script type="text/javascript" src="https://vk.com/js/api/share.js?95" charset="windows-1251"></script>
-<script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+    <script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
 
+    {% block js %}
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    {% endblock %}
 </head>
 
 <body>
@@ -51,8 +54,8 @@
             {% endblock %}
 
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="{% static 'js/main.js' %}"></script>
+    {% block extrajs %}
+    {% endblock%}
 
 </body>
 </html>
