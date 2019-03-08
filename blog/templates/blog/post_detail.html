@@ -1,7 +1,11 @@
 {% extends 'blog/base.html' %}
+{% load staticfiles %}
 
-{% block extrajs %}
+{% block js %}
+{{ block.super }}
 <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script> zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+  ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9","ee6b7db5b51705a13dc2339db3edaf6d"];</script>
 {% endblock %}
 
 {% block content %}
@@ -87,10 +91,6 @@
         </div>
 
         {% else %}
-
-<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
-<script> zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
-		ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9","ee6b7db5b51705a13dc2339db3edaf6d"];</script>
 
 <div class="wrap panel panel-default">
     <p></p>
@@ -331,4 +331,8 @@ document.write(VK.Share.button({url: 'https://www.opinionline.ru/post/{{ post.pk
 
 
 
+{% endblock %}
+
+{% block extrajs %}
+<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}
