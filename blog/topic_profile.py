@@ -57,8 +57,11 @@ def normalize_vector(vec):
 
 
 def normalize_vector_full(vec):
-    if sum(vec) == 0:
-        return vec
+    if sum(vec) == 0 or sum(vec) == -0:
+        norm_vec = []
+        for element in vec:
+            norm_vec.append(1/len(vec))
+        return norm_vec
     ratio = 1 / sum(vec)
     norm_vec = [(i * ratio) for i in vec]
     return norm_vec
