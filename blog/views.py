@@ -119,8 +119,8 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
 
     if extra_context is not None:
         context.update(extra_context)
-    
-    # Remove session on last page 
+
+    # Remove session on last page
     page = utils.get_page_number_from_request(request)
     request.session['page_num'] = page
 
@@ -200,6 +200,9 @@ def topic_profile_recommendations(request, user_vector):
         # comparing user & post vector
         cosine_distance = compare_vectors(user_vector, post_vector)
         weight = post_weights.loc[post_weights.post_id == post.pk, 'weight'].values[0]
+
+        if weight < 0:
+            weight = 0
 
         # forming final rating of posts
         user_rec = {'post': post, 'value': cosine_distance * weight}
