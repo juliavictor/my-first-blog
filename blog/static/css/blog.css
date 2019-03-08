@@ -342,7 +342,7 @@ form .likert {
 }
 
 form .statement {
-    padding: 10px 0 0 4.25%;
+    padding: 10px 4.25% 0 4.25%;
 }
 
 form .likert li {
@@ -547,6 +547,7 @@ table.user-stat a:hover {
 
   .quote-card p {
   max-width: 100%;
+  font-size: 16px;
   }
 
   .quote-card cite {
@@ -583,6 +584,10 @@ blog-comment::before,
 .blog-comment{
     padding-left: 0%;
 	padding-right: 0%;
+}
+
+#caption {
+    font-size: 16px;
 }
 }
 
