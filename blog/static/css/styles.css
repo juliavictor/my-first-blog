@@ -145,6 +145,12 @@ article h2 {
     margin: 0 10%;
 }
 
+@media (max-width:767px) {
+.main-container {
+    margin: 0 7%;
+}
+}
+
 .card-body {
     padding: 1rem;
     font-family: 'Open Sans', sans-serif;
