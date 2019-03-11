@@ -96,12 +96,12 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     if not request.session.get("post_list"):
         # Recommender system 1: content-based
         if not logged_with_vk(request):
-            print("not logged with vk: form_feed_content_recs")
+            # print("not logged with vk: form_feed_content_recs")
             request.session['post_list'] = form_feed_content_recs(request)
 
         # Recommender system 2: topic-profile-based
         else:
-            print("logged with vk: topic_profile_recommendations")
+            # print("logged with vk: topic_profile_recommendations")
 
             user_vector = user_topic_profile(request)
 
@@ -201,8 +201,11 @@ def topic_profile_recommendations(request, user_vector):
         cosine_distance = compare_vectors(user_vector, post_vector)
         weight = post_weights.loc[post_weights.post_id == post.pk, 'weight'].values[0]
 
+        # getting rid of negative values, inelegantly
+        weight = weight + 10000000000000
+
         if weight < 0:
-            weight = 0
+            weight = 0.01
 
         # forming final rating of posts
         user_rec = {'post': post, 'value': cosine_distance * weight}
@@ -492,9 +495,8 @@ def form_recommendations(request, post_list):
             cursor.execute("select post_id, value from blog_post_recs "
                            "where category=" + str(category) +
                            " and user_id=\"" + str(user_key) +
-                           "\" order by value")
+                           "\" order by value desc")
             post_ids = cursor.fetchall()
-
             post_id = -1
 
             for id in post_ids:
