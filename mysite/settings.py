@@ -53,7 +53,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware', # <--
+    'mysite.middleware.SocialAuthExceptionMiddleware',
 ]
+
+
 
 ROOT_URLCONF = 'mysite.urls'
 
