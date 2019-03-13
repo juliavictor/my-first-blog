@@ -835,10 +835,15 @@ def show_user_profile(request):
 # On post save, call topic_profile_rebuild
 @receiver(post_save, sender=Post)
 def post_handler(sender, instance, update_fields, **kwargs):
-    if update_fields is not None and len(update_fields) == 1:
+    if update_fields is not None and len(update_fields) == 2:
+        check = 0
         for field in update_fields:
             if field == "topic_profile":
-                return
+                check += 1
+            if field == "tp_rating":
+                check += 1
+        if check == 2:
+            return
 
     post_topic_profile(instance)
 
@@ -886,7 +891,14 @@ def post_topic_profile(posts):
         vector = form_doc_vector(normalize_doc(post_text), dictionary, True)
 
         post.topic_profile = json.dumps(vector)
-        post.save(update_fields=["topic_profile"])
+
+        rating = ""
+        for line in form_topic_rating(vector, dictionary)[:5]:
+            rating += line[0] + ": " + str(np.round(line[1], 5)) + "\n"
+
+        post.tp_rating = rating
+        post.save(update_fields=["topic_profile", "tp_rating"])
+
         # # json.loads(source)
 
         # print(form_topic_rating(vector, dictionary)[:5])
