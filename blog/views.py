@@ -44,6 +44,34 @@ def connect_to_database():
     return con
 
 
+def write_shown_posts_analytics(request, post_list):
+    # Fix for none session_key
+    if not request.session.session_key:
+        request.session.save()
+
+    user_key = get_user_key(request)
+
+    # Connecting to database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    post_ids = []
+    for post in post_list:
+        post_ids.append(post.pk)
+
+    # Adding view to log
+    t = (user_key, json.dumps(post_ids), datetime.datetime.now())
+    cursor.execute('insert into shown_posts_analytics(user_id,post_list,date) '
+                   'values (?,?,?)', t)
+    con.commit()
+
+    cursor.close()
+    con.close()
+
+
+    return 0
+
+
 # Bug-fix function, twice excluding in order to produce sliceable set
 def random_value(posts):
     if len(posts) == 0:
@@ -89,6 +117,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
             page = request.session['page_num'] - 1
             last_shown_posts = request.session['post_list'][0:page*9+8]
             decrease_shown_posts_rec(request, last_shown_posts)
+            write_shown_posts_analytics(request, last_shown_posts)
 
         del request.session['post_list']
 
@@ -631,6 +660,8 @@ def post_detail(request, pk):
     posts = posts.exclude(id=str(post.pk))
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
+    write_shown_posts_analytics(request, posts)
+
     # polls = random.shuffle([i for i in post.polls.all()])
 
     # print(js_results)
@@ -799,6 +830,7 @@ def show_user_profile(request):
 
     cursor.close()
     con.close()
+
 
     # User name
     fn = request.user.first_name
