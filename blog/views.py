@@ -773,6 +773,7 @@ def show_user_profile(request):
 
     # Getting all polls this user voted
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
     poll_texts = []
     cmap = {1: 'Абсолютно не согласен', 2: 'Скорее не согласен',
             3: 'Отношусь нейтрально', 4: 'Скорее согласен',
