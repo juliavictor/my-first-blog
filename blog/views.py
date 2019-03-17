@@ -117,7 +117,6 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
             page = request.session['page_num'] - 1
             last_shown_posts = request.session['post_list'][0:page*9+8]
             decrease_shown_posts_rec(request, last_shown_posts)
-            write_shown_posts_analytics(request, last_shown_posts)
 
         del request.session['post_list']
 
@@ -148,6 +147,12 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
 
     if extra_context is not None:
         context.update(extra_context)
+
+    # Writing to database shown posts for user
+    if request.session.get("page_num"):
+        page = request.session['page_num'] - 1
+        shown_posts = request.session['post_list'][page * 9:page * 9 + 8]
+        write_shown_posts_analytics(request, shown_posts)
 
     # Remove session on last page
     page = utils.get_page_number_from_request(request)
