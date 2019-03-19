@@ -59,11 +59,24 @@ def write_shown_posts_analytics(request, post_list):
     for post in post_list:
         post_ids.append(post.pk)
 
-    # Adding view to log
-    t = (user_key, json.dumps(post_ids), datetime.datetime.now())
-    cursor.execute('insert into shown_posts_analytics(user_id,post_list,date) '
-                   'values (?,?,?)', t)
-    con.commit()
+    last_recommendation = pd.read_sql_query("select user_id, post_list, date from "
+                   "shown_posts_analytics where user_id=\"" + str(user_key) + "\"", con)
+
+    # If this recommendation is different from the last (catching BUG):
+    if last_recommendation.empty:
+        # Adding view to log
+        t = (user_key, json.dumps(post_ids), datetime.datetime.now())
+        cursor.execute('insert into shown_posts_analytics(user_id,post_list,date) '
+                       'values (?,?,?)', t)
+        con.commit()
+
+    else:
+        if json.dumps(post_ids) != last_recommendation.iloc[-1:]["post_list"].item():
+            # Adding view to log
+            t = (user_key, json.dumps(post_ids), datetime.datetime.now())
+            cursor.execute('insert into shown_posts_analytics(user_id,post_list,date) '
+                           'values (?,?,?)', t)
+            con.commit()
 
     cursor.close()
     con.close()
@@ -115,7 +128,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
         # If current user has loaded the main page at least once
         if request.session.get("page_num"):
             page = request.session['page_num'] - 1
-            last_shown_posts = request.session['post_list'][0:page*9+8]
+            last_shown_posts = request.session['post_list'][0:page*12+12]
             decrease_shown_posts_rec(request, last_shown_posts)
 
         del request.session['post_list']
@@ -148,15 +161,14 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     if extra_context is not None:
         context.update(extra_context)
 
-    # Writing to database shown posts for user
-    if request.session.get("page_num"):
-        page = request.session['page_num'] - 1
-        shown_posts = request.session['post_list'][page * 9:page * 9 + 8]
-        write_shown_posts_analytics(request, shown_posts)
-
     # Remove session on last page
     page = utils.get_page_number_from_request(request)
     request.session['page_num'] = page
+
+    # Writing to database shown posts for user
+    if request.session.get("page_num"):
+        page = request.session['page_num'] - 1
+        write_shown_posts_analytics(request, request.session['post_list'])
 
     return render(request, template, context)
 
