@@ -39,7 +39,7 @@
                 {% if user.is_authenticated %}
                 <a title="Профиль" href="{% url 'show_user_profile' %}">
                     <i class="fas fa-user"></i></a>
-                <a title="Выйти" href="{% url 'logout' %}?next={{request.get_full_path}}">
+                <a title="Выйти" href="{% url 'logout' %}">
                     <i class="fas fa-sign-out-alt"></i></a>
                 {% else %}
                 <a title="Войти" href="{% url 'social:begin' 'vk-oauth2' %}?next={{request.get_full_path}}">
