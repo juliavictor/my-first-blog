@@ -36,10 +36,11 @@
     {% endblock %}
 </head>
 
-<body>
+<body  itemscope itemtype ="http://schema.org/WebPage">
     <header>
         <nav>
             <a class="navbar-link" href="/">Opinion<span>Line</span></a>
+
 
             <div class="login-buttons">
                 {% if user.is_authenticated %}
@@ -58,6 +59,8 @@
     <!--<main role="main" class="grid">-->
 
     <!--</main>-->
+    <span style="display: none;" itemprop="name">OpinionLine</span>
+    <img src="https://www.opinionline.ru/media/img/pic_12abb360f5c812554496b04b5e87b15f.jpg" style="display: none;"  itemprop="image"/>
 
     <div class="main-container">
         <!--<div class="row">-->

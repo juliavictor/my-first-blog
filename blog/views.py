@@ -26,7 +26,7 @@ from django.dispatch import receiver
 from .models import Post, Quote, QuoteInline
 from numpy.random import choice
 import threading
-
+import time
 
 def current_catalog():
     if os.getcwd() == home_path:
@@ -86,7 +86,7 @@ def write_shown_posts_analytics(request, post_list):
 
 
 # Bug-fix function, twice excluding in order to produce sliceable set
-def random_value(posts):
+def random_value(posts, num=None):
     if len(posts) == 0:
         return []
 
@@ -99,7 +99,11 @@ def random_value(posts):
     for post in un_posts:
         top_posts = top_posts.exclude(id=str(post.pk))
 
+    if num:
+        return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:num]
+
     return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:1]
+
 
 
 def read_file(name):
@@ -138,8 +142,8 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
         # Recommender system 1: content-based
         if not logged_with_vk(request):
             # print("not logged with vk: form_feed_content_recs")
-            request.session['post_list'] = form_feed_content_recs(request)
-
+            # request.session['post_list'] = form_feed_content_recs(request)
+            request.session['post_list'] = form_content_recs_analog(request)
         # Recommender system 2: topic-profile-based
         else:
             # print("logged with vk: topic_profile_recommendations")
@@ -439,6 +443,120 @@ def form_feed_content_recs(request):
         # print(len(new_list))
 
     return post_list
+
+
+def form_content_recs_analog(request):
+    start_time = time.time()
+
+    if not request.session.session_key:
+        request.session.save()
+
+    user_key = get_user_key(request)
+
+    # Connecting to database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    posts = []
+    arrays = []
+
+    user_posts = pd.read_sql_query("select user_id, post_id from "
+                                  "blog_post_recs where "
+                                   "user_id=\"" + str(user_key) + "\"", con)
+
+    all_posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
+    # If this user never appeared before
+    if user_posts.empty:
+        for post in all_posts:
+            t = (user_key, post.pk, post.tag, 10)
+            cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
+                           ' values (?,?,?,?)', t)
+        con.commit()
+    else:
+        # updating new posts
+        for post in all_posts:
+            if post.pk not in user_posts["post_id"].tolist():
+                t = (user_key, post.pk, post.tag, 10)
+                cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
+                               ' values (?,?,?,?)', t)
+        con.commit()
+
+    user_cats = pd.read_sql_query("select user_id, category, value from "
+                                  "blog_post_categories where "
+                                  "user_id=\"" + str(user_key) + "\"", con)
+
+    if user_cats.empty:
+        # if user is new, fill all categories with 10
+        for i in range(1, 11):
+            t = (user_key, i, 10)
+            cursor.execute('insert into blog_post_categories(user_id,category,value)'
+                           ' values (?,?,?)', t)
+        con.commit()
+
+        # show 7 most popular posts
+        pop_post = Post.objects
+        arrays.append([y for y in pop_post.filter(published_date__lte=timezone.now()).order_by('-views')[:42]])
+
+    else:
+        # sorting categories list by descending order
+        user_cats = user_cats.sort_values('value', ascending=False)
+
+        # selecting top 7 categories for this user
+        cat_list = user_cats['category'][:7].tolist()
+        cat_list = list(set(cat_list))
+        shuffle(cat_list)
+
+        user_cat_list = pd.read_sql_query("select post_id, value, category from"
+                           " blog_post_recs where user_id=\"" + str(user_key) +
+                           "\" order by value desc", con)
+
+        for category in cat_list:
+            curr_cat = user_cat_list.loc[user_cat_list['category'] == category]
+            post_ids = []
+
+            for index, row in curr_cat.head(7).iterrows():
+                post_ids.append(row[0])
+
+            arrays.append([y for y in Post.objects.filter(id__in=post_ids).order_by('?')])
+
+    cursor.close()
+    con.close()
+
+    # 5 популярных постов
+    pop_posts = Post.objects
+    for array in arrays:
+        for post in array:
+            pop_posts = pop_posts.exclude(id=str(post.pk))
+    pop_posts = pop_posts.filter(published_date__lte=timezone.now()).order_by('-views')[:7]
+
+    arrays.append([y for y in random_value(pop_posts,5)])
+
+    # 5 новых постов
+    new_posts = Post.objects
+    for array in arrays:
+        for post in array:
+            new_posts = new_posts.exclude(id=str(post.pk))
+    new_posts = new_posts.filter(published_date__lte=timezone.now()).order_by('-published_date')[:7]
+
+    arrays.append([z for z in random_value(new_posts,5)])
+
+    # Последовательно соединяем элементы массивов в общий список рекомендованных постов
+    len_sum = 0
+    for array in arrays:
+        len_sum += len(array)
+
+    while len_sum > 0:
+        len_sum = 0
+
+        for array in arrays:
+            if array:
+                posts.append(array.pop(0))
+            len_sum += len(array)
+
+    print("Analog  --- %s seconds ---" % (time.time() - start_time))
+
+    return posts
 
 
 def form_nine_content_recs(request, post_list):
