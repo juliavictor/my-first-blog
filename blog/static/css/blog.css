@@ -465,6 +465,12 @@ form .statement {
 }
 
 /* User statistic page */
+table.user-tp {
+  background: white;
+  font-size: 11pt;
+  color: black;
+}
+
 table.user-stat {
   background: white;
   font-size: 11pt;
