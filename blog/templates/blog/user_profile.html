@@ -5,6 +5,23 @@
 <!--<img src="{{ profile_pic }}" class="avatar" alt="">-->
 Здравствуйте, {{ user_name }}!
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<h3>Ваш тематический профиль:</h3>
+  <table class="table table-bordered user-tp" style="width: 40%;">
+    <thead>
+      <tr class="active">
+        <th>Тема</th>
+        <th>Значение</th>
+      </tr>
+    </thead>
+    <tbody>
+{% for topic in topic_profile %}
+<tr>
+    <td>{{ topic.0 }}</td>
+    <td>{{ topic.1 }}</td>
+</tr>
+{% endfor %}
+   </tbody>
+  </table>
 
 {% if poll_texts %}
 
