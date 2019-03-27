@@ -963,6 +963,21 @@ def show_user_profile(request):
                         value = cmap[value]
                         poll_texts.append((poll, value, date))
 
+
+    # Получаем значение тематического профиля
+    user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
+                                   "from vk_topic_profiles "
+                                   "where uid=\"" + str(user_id) + "\"", con)
+
+    # If vector for current user exists, fetch it from the database
+    if not user_value.empty:
+        topic_vector = json.loads(user_value['topic_profile'][0])
+    else:
+        topic_vector = []
+
+
     cursor.close()
     con.close()
 
@@ -978,26 +993,24 @@ def show_user_profile(request):
         else:
             user_name = request.user
 
-    # print(poll_texts)
 
-    # # Forming topic profiles for ALL posts
-    # posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
-    # post_topic_profile(posts)
+    # Получаем словарь из файла
+    with open(current_catalog() + "dict.json", "r") as read_file:
+        dictionary = json.load(read_file)
 
-    # Testing topic profile recommendations
-    # If user is logged with VK:
-    # if logged_with_vk(request):
-    #     # Loading user vector
-    #     user_vector = user_topic_profile(request)
-    #
-    #     # # Forming rating of best recommended post for current user
-    #     # sorted_recs = topic_profile_recommendations(user_vector)
-    #     #
-    #     # for post_rec in sorted_recs[:10]:
-    #     #     print(post_rec['post'].title + ': ' + str(np.round(post_rec['value'],5)))
+    # Формируем новый тематический профиль
+    rating = form_topic_rating(topic_vector, dictionary, True)
+    user_rating = topic_profile_ui(rating)
+
+    for key in user_rating:
+        user_rating[key] = np.round(user_rating[key], 5)
+
+    # Сортируем получившийся словарь по значению
+    sorted_dict = sorted(user_rating.items(), key=operator.itemgetter(1), reverse=True)
 
     return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
-                                                      'user_name': user_name})
+                                                      'user_name': user_name,
+                                                      'topic_profile': sorted_dict})
 
 
 # On post save, call topic_profile_rebuild
