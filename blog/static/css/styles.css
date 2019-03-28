@@ -222,6 +222,10 @@ aside .profile-buttons a, aside .profile-buttons a:hover{
     clear: both;
 }
 
+.user-profile-content .user-tp {
+    width: 40%;
+}
+
 @media (max-width:767px) {
     aside .profile-buttons li.current-page {
         border: none;
@@ -231,6 +235,14 @@ aside .profile-buttons a, aside .profile-buttons a:hover{
         list-style-type: disc;
         margin-left: 45px;
         margin-bottom: 20px;
+    }
+
+    .user-profile-content .user-tp {
+        width: 100%;
+    }
+
+    aside {
+        padding-bottom: 0;
     }
 
     aside .profile-buttons li {
