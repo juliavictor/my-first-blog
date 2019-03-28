@@ -976,11 +976,11 @@ def show_user_profile(request):
     # Формируем новый тематический профиль
     rating = form_topic_rating(topic_vector, dictionary, True)
 
-    # # Нормализация вектора
-    # i = 0
-    # for key in rating:
-    #     rating[key] = rating[key] / medium_vector[i]
-    #     i += 1
+    # Нормализация вектора
+    i = 0
+    for key in rating:
+        rating[key] = rating[key] - medium_vector[i]
+        i += 1
 
     user_rating = topic_profile_ui(rating)
 
@@ -990,10 +990,10 @@ def show_user_profile(request):
     # Сортируем получившийся словарь по значению
     sorted_dict = sorted(user_rating.items(), key=operator.itemgetter(1), reverse=True)
 
-    # Убираем из списка категории, значения которых меньше 0.02
+    # Убираем из списка категории, значения которых меньше 0
     final_dict = []
     for tup in sorted_dict:
-        if float(tup[1]) >= 0.02:
+        if float(tup[1]) > 0:
             final_dict.append(tup)
         else:
             break
