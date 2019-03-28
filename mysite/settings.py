@@ -169,3 +169,5 @@ os.path.join(BASE_DIR, 'images')
 MEDIA_URL = '/media/'
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
+# ENDLESS_PAGINATION_LOADING = "https://cdn.dribbble.com/users/765253/screenshots/2540865/loader.gif"

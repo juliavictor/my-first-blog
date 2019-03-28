@@ -38,9 +38,9 @@ def current_catalog():
 def connect_to_database():
     # print(os.getcwd())
     if os.getcwd() == home_path:
-        con = sqlite3.connect('db.sqlite3', timeout=10)
+        con = sqlite3.connect('db.sqlite3', timeout=30)
     else:
-        con = sqlite3.connect('proetcontra/db.sqlite3', timeout=10)
+        con = sqlite3.connect('proetcontra/db.sqlite3', timeout=30)
     return con
 
 
@@ -164,6 +164,8 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
 
     if extra_context is not None:
         context.update(extra_context)
+
+    # time.sleep(5)
 
     # Remove session on last page
     page = utils.get_page_number_from_request(request)
@@ -327,14 +329,14 @@ def user_topic_profile(request):
         # building topic profile by shortened group list
         vector = load_user_vk_vector(user_id, 2)
 
-        # # and starting async function
-        download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
-        download_thread.start()
-
         # Write new vector to database
         t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
         cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
         con.commit()
+
+        # # and starting async function
+        download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
+        download_thread.start()
 
     cursor.close()
     con.close()
@@ -446,7 +448,7 @@ def form_feed_content_recs(request):
 
 
 def form_content_recs_analog(request):
-    start_time = time.time()
+    # start_time = time.time()
 
     if not request.session.session_key:
         request.session.save()
@@ -554,7 +556,7 @@ def form_content_recs_analog(request):
                 posts.append(array.pop(0))
             len_sum += len(array)
 
-    print("Analog  --- %s seconds ---" % (time.time() - start_time))
+    # print("Analog  --- %s seconds ---" % (time.time() - start_time))
 
     return posts
 
@@ -919,13 +921,89 @@ def submit_poll(request, pk, answer, poll_id):
         )
 
 
-
 def isNaN(num):
     return num != num
 
 
 @login_required
 def show_user_profile(request):
+    # Fix for none session_key
+    if not request.session.session_key:
+        request.session.save()
+
+    svg = svg_avatar(form_username(request.user))
+
+    # User name
+    fn = request.user.first_name
+    ln = request.user.last_name
+    if len(ln) > 0:
+        user_name = fn + ' ' + ln
+    else:
+        if len(fn) > 0:
+            user_name = fn
+        else:
+            user_name = request.user
+
+    try:
+        # Получаем значение тематического профиля
+        user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    except IndexError:
+        return render(request, 'blog/user_profile.html', {'user_name': user_name,
+                                                              'topic_profile': [("Профиль не сформирован","0")],
+                                                              'svg': svg})
+    # Connecting to database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
+                                   "from vk_topic_profiles "
+                                   "where uid=\"" + str(user_id) + "\"", con)
+
+    cursor.close()
+    con.close()
+
+    # If vector for current user exists, fetch it from the database
+    if not user_value.empty:
+        topic_vector = json.loads(user_value['topic_profile'][0])
+    else:
+        topic_vector = []
+
+    # Получаем словарь из файла
+    with open(current_catalog() + "dict.json", "r") as read_file:
+        dictionary = json.load(read_file)
+
+    # Формируем новый тематический профиль
+    rating = form_topic_rating(topic_vector, dictionary, True)
+
+    # # Нормализация вектора
+    # i = 0
+    # for key in rating:
+    #     rating[key] = rating[key] / medium_vector[i]
+    #     i += 1
+
+    user_rating = topic_profile_ui(rating)
+
+    for key in user_rating:
+        user_rating[key] = np.round(user_rating[key], 5)
+
+    # Сортируем получившийся словарь по значению
+    sorted_dict = sorted(user_rating.items(), key=operator.itemgetter(1), reverse=True)
+
+    # Убираем из списка категории, значения которых меньше 0.02
+    final_dict = []
+    for tup in sorted_dict:
+        if float(tup[1]) >= 0.02:
+            final_dict.append(tup)
+        else:
+            break
+
+    return render(request, 'blog/user_profile.html', {'user_name': user_name,
+                                                      'topic_profile': final_dict,
+                                                      'svg': svg})
+
+@login_required
+def show_user_history(request):
     # Fix for none session_key
 
     if not request.session.session_key:
@@ -964,20 +1042,6 @@ def show_user_profile(request):
                         poll_texts.append((poll, value, date))
 
 
-    # Получаем значение тематического профиля
-    user_id = request.user.social_auth.values_list("uid")[0][0]
-
-    user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
-                                   "from vk_topic_profiles "
-                                   "where uid=\"" + str(user_id) + "\"", con)
-
-    # If vector for current user exists, fetch it from the database
-    if not user_value.empty:
-        topic_vector = json.loads(user_value['topic_profile'][0])
-    else:
-        topic_vector = []
-
-
     cursor.close()
     con.close()
 
@@ -993,24 +1057,10 @@ def show_user_profile(request):
         else:
             user_name = request.user
 
+    svg = svg_avatar(form_username(request.user))
 
-    # Получаем словарь из файла
-    with open(current_catalog() + "dict.json", "r") as read_file:
-        dictionary = json.load(read_file)
-
-    # Формируем новый тематический профиль
-    rating = form_topic_rating(topic_vector, dictionary, True)
-    user_rating = topic_profile_ui(rating)
-
-    for key in user_rating:
-        user_rating[key] = np.round(user_rating[key], 5)
-
-    # Сортируем получившийся словарь по значению
-    sorted_dict = sorted(user_rating.items(), key=operator.itemgetter(1), reverse=True)
-
-    return render(request, 'blog/user_profile.html', {'poll_texts': poll_texts,
-                                                      'user_name': user_name,
-                                                      'topic_profile': sorted_dict})
+    return render(request, 'blog/user_history.html', {'poll_texts': poll_texts,
+                                                      'user_name': user_name, 'svg': svg})
 
 
 # On post save, call topic_profile_rebuild
