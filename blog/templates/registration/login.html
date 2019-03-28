@@ -24,30 +24,9 @@
         <input type="hidden" name="next" value="{{ next }}" />
     </form>-->
 
-  <p>Войти с помощью социальных сетей:</p>
+  <p>Для просмотра страницы <a title="Войти" style="text-decoration: underline;" href="{% url 'social:begin' 'vk-oauth2' %}">
+      войдите</a> с помощью социальной сети ВКонтакте.</p>
 
-  <div class="social-networks">
 
-  <a class="btn btn-block btn-social-icon btn-twitter"
-     href="{% url 'social:begin' 'twitter' %}">
-    <span class="fa fa-twitter"></span></a>
-
-  <a class="btn btn-block btn-social-icon btn-vk"
-     href="{% url 'social:begin' 'vk-oauth2' %}">
-    <span class="fa fa-vk"></span></a>
-
-  <!--<a class="btn btn-block btn-social btn-facebook"
-     href="{% url 'social:begin' 'facebook' %}">
-    <span class="fa fa-facebook"></span>Facebook
-  </a>-->
-
-  <a class="btn btn-block btn-social-icon btn-google"
-     href="{% url 'social:begin' 'google-oauth2' %}">
-    <span class="fa fa-google"></span></a>
-
-  <a class="btn btn-block btn-social-icon btn-odnoklassniki"
-     href="{% url 'social:begin' 'odnoklassniki-oauth2' %}">
-    <span class="fa fa-odnoklassniki"></span></a>
-  </div>
 
 {% endblock %}

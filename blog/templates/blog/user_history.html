@@ -1,0 +1,85 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+
+<aside> <!-- Дополнительная информация о профиле -->
+    <div class="profile-info">
+        {% autoescape off %}{{ svg }}{% endautoescape %}
+        <h3>{{ user_name }}</h3>
+    </div>
+    <ul class="profile-buttons">
+        <li><a title="Тематический профиль" href="{% url 'show_user_profile' %}">Тематический профиль</a></li>
+        <li class="current-page">История голосований</li>
+    </ul>
+</aside>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+{% if poll_texts %}
+
+<div class="user-profile-content">
+  <h4>Результаты пройденных вами опросов:</h4>
+  <table class="table table-bordered user-stat" id="table1">
+    <thead>
+      <tr class="active">
+        <th>Тема</th>
+        <th>Вопрос</th>
+        <th>Ваш ответ</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for poll_text in poll_texts %}
+      <tr>
+        <td style="width: 20%">
+          <a href="{% url 'post_detail' pk=poll_text.0.quote.post.pk %}">
+            {{ poll_text.0.quote.post }}</a>
+          <br>
+          <i>Дата: {{ poll_text.2.2 }}.{{ poll_text.2.1 }}.{{ poll_text.2.0 }}</i>
+        </td>
+        <td style="width: 60%">{{ poll_text.0.question }}</td>
+        <td style="width: 20%">{{ poll_text.1 }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+    function SummerizeTable(table) {
+  $(table).each(function() {
+    $(table).find('td').each(function() {
+      var $this = $(this);
+      var col = $this.index();
+      var html = $this.html();
+      var row = $(this).parent()[0].rowIndex;
+      var span = 1;
+      var cell_above = $($this.parent().prev().children()[col]);
+
+      // look for cells one above another with the same text
+      while (cell_above.html() === html && col == 0) { // if the text is the same
+        span += 1; // increase the span
+        cell_above_old = cell_above; // store this cell
+        cell_above = $(cell_above.parent().prev().children()[col]); // and go to the next cell above
+      }
+
+      // if there are at least two columns with the same value,
+      // set a new span to the first and hide the other
+      if (span > 1) {
+        // console.log(span);
+        $(cell_above_old).attr('rowspan', span);
+        $this.hide();
+      }
+    });
+    document.getElementById("table1").style.display= 'block' ;
+  });
+}
+
+window.onload = SummerizeTable('#table1')
+</script>
+
+{% else %}
+
+Вы еще ни разу не голосовали.
+
+{% endif %}
+
+{% endblock %}

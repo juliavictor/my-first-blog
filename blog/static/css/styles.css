@@ -184,3 +184,57 @@ article h2 {
     -moz-column-count: 1;
  }
 }
+
+/* User profile & history */
+aside {
+    padding-bottom: 30px;
+}
+
+aside .profile-info h3 {
+    margin: 2px;
+}
+
+aside .profile-buttons {
+    list-style: none;
+    margin-left: 30px;
+    font-size: 11.4pt;
+}
+
+aside .profile-buttons li {
+    float: left;
+    margin-right: 7px;
+}
+
+aside .profile-buttons li.current-page {
+    border-bottom: 1px solid black;
+    font-weight: 600;
+}
+
+aside .profile-buttons a:hover {
+    color: #97b2f4;
+}
+
+aside .profile-buttons a, aside .profile-buttons a:hover{
+    transition: color 0.2s;
+}
+
+.user-profile-content {
+    clear: both;
+}
+
+@media (max-width:767px) {
+    aside .profile-buttons li.current-page {
+        border: none;
+    }
+
+    aside .profile-buttons {
+        list-style-type: disc;
+        margin-left: 45px;
+        margin-bottom: 20px;
+    }
+
+    aside .profile-buttons li {
+        float: none;
+    }
+
+}
