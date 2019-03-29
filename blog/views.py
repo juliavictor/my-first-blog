@@ -345,7 +345,7 @@ def user_topic_profile(request):
 
 
 def load_user_vk_vector(user_id, group_limit=None):
-    # print("load_user_vk_vector start")
+    print("user " + str(user_id) + " load_user_vk_vector start")
 
     # Connecting to VK Api
     vk_session = vk_api.VkApi(vk_username, vk_password)
@@ -404,7 +404,7 @@ def load_user_vk_vector(user_id, group_limit=None):
     # for line in form_topic_rating(vector, dictionary)[:10]:
     #     print(line[0] + ": " + str(np.round(line[1],5)))
 
-    # print("load_user_vk_vector end " + str(len(group_array)))
+    print("user " + str(user_id) + " load_user_vk_vector end " + str(len(group_array)))
     return vector
 
 
