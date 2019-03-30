@@ -345,7 +345,7 @@ def user_topic_profile(request):
 
 
 def load_user_vk_vector(user_id, group_limit=None):
-    print("user " + str(user_id) + " load_user_vk_vector start")
+    print("load_user_vk_vector start: user " + str(user_id))
 
     # Connecting to VK Api
     vk_session = vk_api.VkApi(vk_username, vk_password)
@@ -357,10 +357,14 @@ def load_user_vk_vector(user_id, group_limit=None):
     with open(current_catalog() + "dict.json", "r") as read_file:
         dictionary = json.load(read_file)
 
+    print("load_user_vk_vector: check point 1")
+
     # Получаем список групп пользователя вместе с количеством участников
     group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
 
     feed = ""
+
+    print("load_user_vk_vector: check point 2")
 
     # Ограничение на количество групп
     if group_limit is None:
@@ -371,7 +375,7 @@ def load_user_vk_vector(user_id, group_limit=None):
     # Для каждой группы в цикле проверяем количество участников
     # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
     for group in group_array:
-        # print(str(group['id']) + "...")
+        print("load_user_vk_vector: group download: " + str(group['id']) + "...")
         try:
             members = group['members_count']
         except KeyError:
@@ -383,6 +387,8 @@ def load_user_vk_vector(user_id, group_limit=None):
 
     # Строим тематический профиль
     vector = form_doc_vector(normalize_doc(feed), dictionary, True)
+
+    print("load_user_vk_vector: check point 3")
 
     # Нормализуем его
     vector = normalize_vector(vector)
@@ -404,7 +410,7 @@ def load_user_vk_vector(user_id, group_limit=None):
     # for line in form_topic_rating(vector, dictionary)[:10]:
     #     print(line[0] + ": " + str(np.round(line[1],5)))
 
-    print("user " + str(user_id) + " load_user_vk_vector end " + str(len(group_array)))
+    print("load_user_vk_vector: user " + str(user_id) + " end, at array len:" + str(len(group_array)))
     return vector
 
 
@@ -979,7 +985,7 @@ def show_user_profile(request):
     # Нормализация вектора
     i = 0
     for key in rating:
-        rating[key] = rating[key] - medium_vector[i]
+        rating[key] = rating[key]*((rating[key] - medium_vector[i])/std_array_2[i])
         i += 1
 
     user_rating = topic_profile_ui(rating)
@@ -1041,6 +1047,8 @@ def show_user_history(request):
                         value = cmap[value]
                         poll_texts.append((poll, value, date))
 
+    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=65705491')
+    # con.commit()
 
     cursor.close()
     con.close()
