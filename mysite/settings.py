@@ -170,4 +170,7 @@ MEDIA_URL = '/media/'
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+
 # ENDLESS_PAGINATION_LOADING = "https://cdn.dribbble.com/users/765253/screenshots/2540865/loader.gif"

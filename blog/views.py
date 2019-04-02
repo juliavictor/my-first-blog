@@ -140,7 +140,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # Add session key for pagination without reloading new content
     if not request.session.get("post_list"):
         # Recommender system 1: content-based
-        if not logged_with_vk(request):
+        if not logged_with_vk(request) or not open_vk_profile(request):
             # print("not logged with vk: form_feed_content_recs")
             # request.session['post_list'] = form_feed_content_recs(request)
             request.session['post_list'] = form_content_recs_analog(request)
@@ -302,6 +302,51 @@ def logged_with_vk(request):
         return request.user.social_auth.exists()
     else:
         return False
+
+# Checks whether or not current user' VK profile is clodes
+def open_vk_profile(request):
+    if not logged_with_vk(request):
+        return False
+
+    user_id = request.user.social_auth.values_list("uid")[0][0]
+
+    # Check if current user' topic profile is in database
+    con = connect_to_database()
+    cursor = con.cursor()
+
+    user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
+                                   "from vk_topic_profiles "
+                                   "where uid=\"" + str(user_id) + "\"", con)
+
+    # If vector for current user exists, fetch it from the database
+    if not user_value.empty:
+        if user_value['rs'][0] == 1:
+            return True
+        else:
+            return False
+
+    else:
+        # Connecting to VK Api
+        vk_session = vk_api.VkApi(vk_username, vk_password)
+        vk_session.auth()
+
+        vk = vk_session.get_api()
+
+        try:
+            # Получаем список групп пользователя вместе с количеством участников
+            group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
+
+
+        except vk_api.exceptions.ApiError:
+            t = (user_id, json.dumps([0]), datetime.datetime.now(), 0)
+            cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
+            con.commit()
+            return False
+
+    cursor.close()
+    con.close()
+
+    return True
 
 
 # Builds topic profile for VK user
@@ -958,7 +1003,13 @@ def show_user_profile(request):
         return render(request, 'blog/user_profile.html', {'user_name': user_name,
                                                               'topic_profile': [("Профиль не сформирован","0")],
                                                               'svg': svg})
-    # Connecting to database
+
+    if not open_vk_profile(request):
+        return render(request, 'blog/user_profile.html', {'user_name': user_name,
+                                                          'topic_profile': [("Профиль не сформирован: профиль VK закрыт", "0")],
+                                                          'svg': svg})
+
+        # Connecting to database
     con = connect_to_database()
     cursor = con.cursor()
 
