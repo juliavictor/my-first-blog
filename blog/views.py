@@ -411,24 +411,31 @@ def load_user_vk_vector(user_id, group_limit=None):
 
     print("load_user_vk_vector: check point 2")
 
-    # Ограничение на количество групп
-    if group_limit is None:
-        group_array = group_list['items']
-    else:
-        group_array = group_list['items'][0:group_limit]
+    # # Ограничение на количество групп
+    # if group_limit is None:
+    #     group_array = group_list['items']
+    # else:
+    #     group_array = group_list['items'][0:group_limit]
+
+    i = 0
 
     # Для каждой группы в цикле проверяем количество участников
     # Если удовлетворяет условию, то добавляем в общий документ по 100 постов со стены
-    for group in group_array:
-        print("load_user_vk_vector: group download: " + str(group['id']) + "...")
+    for group in group_list['items']:
         try:
             members = group['members_count']
         except KeyError:
             continue
 
+        if 50 <= members <= 1000000 and group['id'] not in VK_GROUP_ID_EXCEPTIONS:
+            print("load_user_vk_vector: group download: " + str(group['id']) + "...")
+            download = get_group_wall(vk, group['id'])
+            feed += download
+            if len(download) > 0:
+                i += 1
 
-        if 50 <= members <= 1000000:
-            feed += get_group_wall(vk, group['id'])
+        if i == group_limit:
+            break
 
     # Строим тематический профиль
     vector = form_doc_vector(normalize_doc(feed), dictionary, True)
@@ -455,7 +462,7 @@ def load_user_vk_vector(user_id, group_limit=None):
     # for line in form_topic_rating(vector, dictionary)[:10]:
     #     print(line[0] + ": " + str(np.round(line[1],5)))
 
-    print("load_user_vk_vector: user " + str(user_id) + " end, at array len:" + str(len(group_array)))
+    print("load_user_vk_vector: user " + str(user_id) + " end, at array len:" + str(i))
     return vector
 
 
