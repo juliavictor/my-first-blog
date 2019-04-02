@@ -27,6 +27,8 @@ from .models import Post, Quote, QuoteInline
 from numpy.random import choice
 import threading
 import time
+from background_task import background
+
 
 def current_catalog():
     if os.getcwd() == home_path:
@@ -303,6 +305,7 @@ def logged_with_vk(request):
     else:
         return False
 
+
 # Checks whether or not current user' VK profile is clodes
 def open_vk_profile(request):
     if not logged_with_vk(request):
@@ -335,7 +338,6 @@ def open_vk_profile(request):
         try:
             # Получаем список групп пользователя вместе с количеством участников
             group_list = vk.groups.get(user_id=user_id, extended=1, fields='members_count')
-
 
         except vk_api.exceptions.ApiError:
             t = (user_id, json.dumps([0]), datetime.datetime.now(), 0)
@@ -372,16 +374,17 @@ def user_topic_profile(request):
 
     else:
         # building topic profile by shortened group list
-        vector = load_user_vk_vector(user_id, 2)
+        vector = load_user_vk_vector.now(user_id, 2)
 
         # Write new vector to database
         t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
         cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
         con.commit()
 
-        # # and starting async function
-        download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
-        download_thread.start()
+        # # # and starting async function
+        # download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
+        # download_thread.start()
+        load_user_vk_vector(user_id)
 
     cursor.close()
     con.close()
@@ -389,6 +392,7 @@ def user_topic_profile(request):
     return vector
 
 
+@background(schedule=2)
 def load_user_vk_vector(user_id, group_limit=None):
     print("load_user_vk_vector start: user " + str(user_id))
 
