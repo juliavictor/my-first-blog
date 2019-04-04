@@ -8,6 +8,9 @@
             <img src="{{ post.image.url }}" class="card-img img-fluid"/>
             <div class="card-body">
                  <div class="card-title"> {{ post.title }} </div>
+                 <div class="card-text">
+                     <i class="fas fa-poll"></i>  {% if user.is_authenticated%}{{ post.user_polls }}/{% endif %}{{ post.total_polls }}
+                 </div>
             </div>
          </a>
       </div>

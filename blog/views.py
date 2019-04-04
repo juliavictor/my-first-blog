@@ -42,7 +42,11 @@ def connect_to_database():
     if os.getcwd() == home_path:
         con = sqlite3.connect('db.sqlite3', timeout=30)
     else:
-        con = sqlite3.connect('proetcontra/db.sqlite3', timeout=30)
+        try:
+            con = sqlite3.connect('proetcontra/db.sqlite3', timeout=30)
+
+        except sqlite3.OperationalError:
+            con = sqlite3.connect('db.sqlite3', timeout=30)
     return con
 
 
@@ -155,9 +159,34 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
             # Forming rating of best recommended post for current user
             request.session['post_list'] = topic_profile_recommendations(request, user_vector)
 
+        # Подгрузка сведений об опросах поста
+        # Connecting to database
+        con = connect_to_database()
+        cursor = con.cursor()
+
+        # Check if current user voted in current poll
+        user_key = get_user_key(request)
+        user_polls = pd.read_sql_query("SELECT * FROM blog_poll_values "
+                                        "where user_id=\"" + str(user_key) + "\"", con)
+
+        cursor.close()
+        con.close()
+
+        for post in request.session['post_list']:
+            poll_id_array = []
+
+            for quote in post.quotes.all():
+                for poll in quote.polls.all():
+                    poll_id_array.append(poll.id)
+
+            user_poll_num = user_polls.loc[user_polls.post_id == post.pk]['blog_poll_id'].tolist()
+
+            setattr(post, 'total_polls', len(poll_id_array))
+            setattr(post, 'user_polls', len(set(user_poll_num) & set(poll_id_array)))
 
     # Get objects of posts from session
     posts = request.session.get('post_list')
+
 
     # Form a list of recommended posts
     context = {
@@ -403,8 +432,14 @@ def load_user_vk_vector(user_id, group_limit=None):
     vk = vk_session.get_api()
 
     # Получаем словарь из файла
-    with open(current_catalog() + "dict.json", "r") as read_file:
-        dictionary = json.load(read_file)
+    try:
+        with open(current_catalog() + "dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
+
+    except FileNotFoundError:
+        with open("dict.json", "r") as read_file:
+            dictionary = json.load(read_file)
+
 
     print("load_user_vk_vector: check point 1")
 
@@ -1037,6 +1072,12 @@ def show_user_profile(request):
     else:
         topic_vector = []
 
+    if len(topic_vector) != 69:
+        return render(request, 'blog/user_profile.html', {'user_name': user_name,
+                                                          'topic_profile': [
+                                                              ("Тематический профиль не был сформирован", "0")],
+                                                          'svg': svg})
+
     # Получаем словарь из файла
     with open(current_catalog() + "dict.json", "r") as read_file:
         dictionary = json.load(read_file)
@@ -1109,7 +1150,7 @@ def show_user_history(request):
                         value = cmap[value]
                         poll_texts.append((poll, value, date))
 
-    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=65705491')
+    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=189183825')
     # con.commit()
 
     cursor.close()

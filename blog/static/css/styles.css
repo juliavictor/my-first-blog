@@ -166,6 +166,7 @@ article h2 {
 
 .card-title {
     margin-bottom: 0;
+
 }
 
 .card:hover {
@@ -175,8 +176,33 @@ article h2 {
     border-color: rgba(27,31,35,.35);
 }
 
+.card:hover .card-text{
+    opacity: 1;
+    transition: opacity 0.1s;
+}
+
+
+.card-text {
+    color: rgba(27,31,35,.75);
+    background: white;
+    border-radius: 2px;
+
+
+    padding: 0 0.2rem;
+
+    position: absolute;
+    right: 6px;
+    top: 6px;
+
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
 
 @media (max-width:767px) {
+.card-text {
+    opacity: 1;
+}
 
 .card-columns {
     column-count: 1;
