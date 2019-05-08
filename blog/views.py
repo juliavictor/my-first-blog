@@ -407,7 +407,16 @@ def user_topic_profile(request):
 
         # Write new vector to database
         t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
-        cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
+
+        # Additional ERROR check on sqlite3.IntegrityError
+        try:
+            cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
+
+        except sqlite3.IntegrityError:
+            print("sqlite3.IntegrityError on user_id = " + str(user_id) + "; passing vector update")
+            # cursor.execute("update vk_topic_profiles set topic_profile = \""
+            #            + json.dumps(vector) + "\" where uid=" + str(user_id))
+
         con.commit()
 
         # # # and starting async function
@@ -1150,7 +1159,7 @@ def show_user_history(request):
                         value = cmap[value]
                         poll_texts.append((poll, value, date))
 
-    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=189183825')
+    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=393150310')
     # con.commit()
 
     cursor.close()
