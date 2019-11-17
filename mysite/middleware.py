@@ -21,5 +21,6 @@ class SocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
 
             else:
                 raise exception
+
         else:
             raise exception
