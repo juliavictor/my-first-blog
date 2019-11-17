@@ -49,7 +49,20 @@ def connect_to_database():
             con = sqlite3.connect('db.sqlite3', timeout=30)
     return con
 
+# Read-only connection to DB
+def connect_to_database_ro():
+    if os.getcwd() == home_path:
+        con = sqlite3.connect('file:db.sqlite3?mode=ro', uri=True, timeout=30)
+    else:
+        try:
+            con = sqlite3.connect('file:proetcontra/db.sqlite3?mode=ro', uri=True, timeout=30)
 
+        except sqlite3.OperationalError:
+            con = sqlite3.connect('file:db.sqlite3?mode=ro', uri=True, timeout=30)
+    return con
+
+
+# Disabled as of 17/11/19
 def write_shown_posts_analytics(request, post_list):
     # Fix for none session_key
     if not request.session.session_key:
@@ -91,7 +104,7 @@ def write_shown_posts_analytics(request, post_list):
     return 0
 
 
-# Bug-fix function, twice excluding in order to produce sliceable set
+# Twice excluding in order to produce sliceable set
 def random_value(posts, num=None):
     if len(posts) == 0:
         return []
@@ -109,7 +122,6 @@ def random_value(posts, num=None):
         return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:num]
 
     return top_posts.filter(published_date__lte=timezone.now()).order_by('?')[:1]
-
 
 
 def read_file(name):
@@ -161,7 +173,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
 
         # Подгрузка сведений об опросах поста
         # Connecting to database
-        con = connect_to_database()
+        con = connect_to_database_ro()
         cursor = con.cursor()
 
         # Check if current user voted in current poll
@@ -205,17 +217,17 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     # Writing to database shown posts for user
     if request.session.get("page_num"):
         page = request.session['page_num'] - 1
-        write_shown_posts_analytics(request, request.session['post_list'])
+        # write_shown_posts_analytics(request, request.session['post_list'])
 
     return render(request, template, context)
 
 
 def decrease_shown_posts_rec(request, posts):
+    user_key = get_user_key(request)
+
     # Updating values for shown posts
     con = connect_to_database()
     cursor = con.cursor()
-
-    user_key = get_user_key(request)
 
     for post in posts:
         # decrease tag values of shown posts by 0.1
@@ -247,13 +259,16 @@ def topic_profile_recommendations(request, user_vector):
     user_id = request.user.social_auth.values_list("uid")[0][0]
 
     # Collecting post weights from database
-    con = connect_to_database()
-    cursor = con.cursor()
-
+    con = connect_to_database_ro()
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
     post_weights = pd.read_sql_query("select user_id, post_id, weight from "
                    "topic_profile_user_post where user_id=\"" + str(user_id) + "\"", con)
 
+    con.close()
+
+
+    con = connect_to_database()
+    cursor = con.cursor()
     # Updating new posts OR creating rows for new user
     for post in posts:
         if post.pk not in post_weights["post_id"].tolist():
@@ -261,12 +276,13 @@ def topic_profile_recommendations(request, user_vector):
             cursor.execute('insert into topic_profile_user_post(user_id,post_id,weight)'
                            ' values (?,?,?)', t)
     con.commit()
+    con.close()
 
+    con = connect_to_database_ro()
     # Loading updated database (once again)
     post_weights = pd.read_sql_query("select user_id, post_id, weight from "
                                      "topic_profile_user_post where user_id=\"" + str(user_id) + "\"", con)
 
-    cursor.close()
     con.close()
 
     # At this point post_weights MUST be - not post_weights.empty -
@@ -343,12 +359,12 @@ def open_vk_profile(request):
     user_id = request.user.social_auth.values_list("uid")[0][0]
 
     # Check if current user' topic profile is in database
-    con = connect_to_database()
-    cursor = con.cursor()
+    con = connect_to_database_ro()
 
     user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
                                    "from vk_topic_profiles "
                                    "where uid=\"" + str(user_id) + "\"", con)
+    con.close()
 
     # If vector for current user exists, fetch it from the database
     if not user_value.empty:
@@ -370,12 +386,12 @@ def open_vk_profile(request):
 
         except vk_api.exceptions.ApiError:
             t = (user_id, json.dumps([0]), datetime.datetime.now(), 0)
+            con = connect_to_database_ro()
+            cursor = con.cursor()
             cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
             con.commit()
+            con.close()
             return False
-
-    cursor.close()
-    con.close()
 
     return True
 
@@ -388,12 +404,13 @@ def user_topic_profile(request):
     user_id = request.user.social_auth.values_list("uid")[0][0]
 
     # Check if current user' topic profile is in database
-    con = connect_to_database()
-    cursor = con.cursor()
+    con = connect_to_database_ro()
 
     user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
                                    "from vk_topic_profiles "
                                    "where uid=\"" + str(user_id) + "\"", con)
+
+    con.close()
 
     # If vector for current user exists, fetch it from the database
     if not user_value.empty:
@@ -408,24 +425,17 @@ def user_topic_profile(request):
         # Write new vector to database
         t = (user_id, json.dumps(vector), datetime.datetime.now(), 1)
 
-        # Additional ERROR check on sqlite3.IntegrityError
-        try:
-            cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
-
-        except sqlite3.IntegrityError:
-            print("sqlite3.IntegrityError on user_id = " + str(user_id) + "; passing vector update")
-            # cursor.execute("update vk_topic_profiles set topic_profile = \""
-            #            + json.dumps(vector) + "\" where uid=" + str(user_id))
-
+        con = connect_to_database()
+        cursor = con.cursor()
+        cursor.execute('insert into vk_topic_profiles(uid,topic_profile,date, rs) values (?,?,?,?)', t)
         con.commit()
+        con.close()
 
         # # # and starting async function
         # download_thread = threading.Thread(target=load_user_vk_vector, args=[user_id])
         # download_thread.start()
         load_user_vk_vector(user_id)
 
-    cursor.close()
-    con.close()
 
     return vector
 
@@ -540,6 +550,7 @@ def get_user_key(request):
     return str(user_key)
 
 
+# Not used anymore. Look for form_content_recs_analog
 def form_feed_content_recs(request):
     post_list = form_nine_content_recs(request, [])
     new_list = post_list
@@ -561,21 +572,26 @@ def form_content_recs_analog(request):
 
     user_key = get_user_key(request)
 
-    # Connecting to database
-    con = connect_to_database()
-    cursor = con.cursor()
-
     posts = []
     arrays = []
+
+    # Connecting to database
+    con = connect_to_database_ro()
 
     user_posts = pd.read_sql_query("select user_id, post_id from "
                                   "blog_post_recs where "
                                    "user_id=\"" + str(user_key) + "\"", con)
 
+    con.close()
+
     all_posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
+
+    con = connect_to_database()
+    cursor = con.cursor()
 
     # If this user never appeared before
     if user_posts.empty:
+
         for post in all_posts:
             t = (user_key, post.pk, post.tag, 10)
             cursor.execute('insert into blog_post_recs(user_id,post_id,category,value)'
@@ -594,13 +610,20 @@ def form_content_recs_analog(request):
                                   "blog_post_categories where "
                                   "user_id=\"" + str(user_key) + "\"", con)
 
+    cursor.close()
+    con.close()
+
     if user_cats.empty:
+        con = connect_to_database()
+        cursor = con.cursor()
         # if user is new, fill all categories with 10
         for i in range(1, 11):
             t = (user_key, i, 10)
             cursor.execute('insert into blog_post_categories(user_id,category,value)'
                            ' values (?,?,?)', t)
         con.commit()
+        cursor.close()
+        con.close()
 
         # show 7 most popular posts
         pop_post = Post.objects
@@ -615,9 +638,13 @@ def form_content_recs_analog(request):
         cat_list = list(set(cat_list))
         shuffle(cat_list)
 
+        con = connect_to_database_ro()
+
         user_cat_list = pd.read_sql_query("select post_id, value, category from"
                            " blog_post_recs where user_id=\"" + str(user_key) +
                            "\" order by value desc", con)
+
+        con.close()
 
         for category in cat_list:
             curr_cat = user_cat_list.loc[user_cat_list['category'] == category]
@@ -628,8 +655,7 @@ def form_content_recs_analog(request):
 
             arrays.append([y for y in Post.objects.filter(id__in=post_ids).order_by('?')])
 
-    cursor.close()
-    con.close()
+
 
     # 5 популярных постов
     pop_posts = Post.objects
@@ -667,6 +693,7 @@ def form_content_recs_analog(request):
     return posts
 
 
+# Not used anymore. Look for form_content_recs_analog
 def form_nine_content_recs(request, post_list):
     posts = form_recommendations(request, post_list)
 
@@ -694,7 +721,7 @@ def form_nine_content_recs(request, post_list):
     return posts
 
 
-
+# Not used anymore. Look for form_content_recs_analog
 def form_recommendations(request, post_list):
     # form list of 7 categories
     post_list_ids = []
@@ -800,14 +827,18 @@ def post_detail(request, pk):
 
     user_key = get_user_key(request)
 
+    # Adding view to log
+    t = (user_key, pk, datetime.datetime.now())
+
     # Connecting to database
     con = connect_to_database()
     cursor = con.cursor()
 
-    # Adding view to log
-    t = (user_key, pk, datetime.datetime.now())
     cursor.execute('insert into blog_post_views(user_id,post_id,date) values (?,?,?)', t)
+
     con.commit()
+    cursor.close()
+    con.close()
 
     # Polls: submitting on POST
     if request.method == "POST":
@@ -822,6 +853,8 @@ def post_detail(request, pk):
     poll_value = 0
     # !! const_value for graph visualisation
     const = 1
+
+    con = connect_to_database_ro()
 
     for quote in post.quotes.all():
         for poll in quote.polls.all():
@@ -867,11 +900,16 @@ def post_detail(request, pk):
                 # We will not show results
                 js_results[poll.id] = None
 
-
     # Unique views counter setting
+    cursor = con.cursor()
     cursor.execute("select user_id, post_id, max(date) as date from blog_post_views "
                    "where post_id=" + pk + " group by user_id")
     post.views = len(cursor.fetchall())
+    cursor.close()
+    con.close()
+
+    con = connect_to_database()
+    cursor = con.cursor()
 
     # Increasing value by 0.8
     cursor.execute("update blog_post_categories set value = value + 0.8"
@@ -903,7 +941,7 @@ def post_detail(request, pk):
     posts = posts.exclude(id=str(post.pk))
     posts = posts.filter(tag=post.tag).order_by('?')[:3]
 
-    write_shown_posts_analytics(request, posts)
+    # write_shown_posts_analytics(request, posts)
 
     # polls = random.shuffle([i for i in post.polls.all()])
 
@@ -992,6 +1030,9 @@ def submit_poll(request, pk, answer, poll_id):
             "blog_poll_id, value, max(date) as date from blog_poll_values where "
             "blog_poll_id="+str(poll_id)+" group by user_id) group by value", con)
 
+        cursor.close()
+        con.close()
+
         values = post_values['value'].tolist()
         counts = post_values['count(value)'].tolist()
 
@@ -1014,8 +1055,7 @@ def submit_poll(request, pk, answer, poll_id):
         js_results["id"] = poll_id
         js_results["values"] = array
 
-        cursor.close()
-        con.close()
+
         return HttpResponse(
                 json.dumps(js_results),
                 content_type="application/json"
@@ -1064,15 +1104,11 @@ def show_user_profile(request):
                                                           'topic_profile': [("Профиль не сформирован: профиль VK закрыт", "0")],
                                                           'svg': svg})
 
-        # Connecting to database
-    con = connect_to_database()
-    cursor = con.cursor()
-
+    # Connecting to database
+    con = connect_to_database_ro()
     user_value = pd.read_sql_query("select uid, topic_profile, date, rs "
                                    "from vk_topic_profiles "
                                    "where uid=\"" + str(user_id) + "\"", con)
-
-    cursor.close()
     con.close()
 
     # If vector for current user exists, fetch it from the database
@@ -1130,9 +1166,7 @@ def show_user_history(request):
     user_key = get_user_key(request)
 
     # Connecting to database
-    con = connect_to_database()
-    cursor = con.cursor()
-
+    con = connect_to_database_ro()
     # Getting all polls this user voted
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-views')
 
@@ -1159,10 +1193,9 @@ def show_user_history(request):
                         value = cmap[value]
                         poll_texts.append((poll, value, date))
 
-    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=393150310')
+    # cursor.execute('DELETE FROM vk_topic_profiles WHERE uid=189183825')
     # con.commit()
 
-    cursor.close()
     con.close()
 
 
