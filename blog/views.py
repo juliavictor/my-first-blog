@@ -28,7 +28,8 @@ from numpy.random import choice
 import threading
 import time
 from background_task import background
-
+import csv
+from time import gmtime, strftime
 
 def current_catalog():
     if os.getcwd() == home_path:
@@ -145,6 +146,14 @@ def write_file(df, name):
 @page_template('blog/post_list_page.html')
 def post_list(request, template='blog/post_list.html', extra_context=None):
 
+    start = time.time()
+    time_array = []
+
+    time_array.append(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+
+    time_array.append(round(time.time() - start, 2))
+
+
     # Remove session key on 1 page after reload
     if not request.is_ajax() and request.session.get("post_list"):
         # If current user has loaded the main page at least once
@@ -154,6 +163,8 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
             decrease_shown_posts_rec(request, last_shown_posts)
 
         del request.session['post_list']
+
+    time_array.append(round(time.time() - start, 2))
 
     # Add session key for pagination without reloading new content
     if not request.session.get("post_list"):
@@ -171,6 +182,7 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
             # Forming rating of best recommended post for current user
             request.session['post_list'] = topic_profile_recommendations(request, user_vector)
 
+        time_array.append(round(time.time() - start, 2))
         # Подгрузка сведений об опросах поста
         # Connecting to database
         con = connect_to_database_ro()
@@ -184,17 +196,24 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
         cursor.close()
         con.close()
 
-        for post in request.session['post_list']:
-            poll_id_array = []
+        time_array.append(round(time.time() - start, 2))
 
-            for quote in post.quotes.all():
-                for poll in quote.polls.all():
-                    poll_id_array.append(poll.id)
 
-            user_poll_num = user_polls.loc[user_polls.post_id == post.pk]['blog_poll_id'].tolist()
+        # for post in request.session['post_list']:
+        #     poll_id_array = []
 
-            setattr(post, 'total_polls', len(poll_id_array))
-            setattr(post, 'user_polls', len(set(user_poll_num) & set(poll_id_array)))
+        #     for quote in post.quotes.all():
+        #         for poll in quote.polls.all():
+        #             poll_id_array.append(poll.id)
+
+        #     user_poll_num = user_polls.loc[user_polls.post_id == post.pk]['blog_poll_id'].tolist()
+
+        #     setattr(post, 'total_polls', len(poll_id_array))
+        #     setattr(post, 'user_polls', len(set(user_poll_num) & set(poll_id_array)))
+
+
+        time_array.append(round(time.time() - start, 2))
+
 
     # Get objects of posts from session
     posts = request.session.get('post_list')
@@ -208,7 +227,6 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     if extra_context is not None:
         context.update(extra_context)
 
-    # time.sleep(5)
 
     # Remove session on last page
     page = utils.get_page_number_from_request(request)
@@ -218,6 +236,13 @@ def post_list(request, template='blog/post_list.html', extra_context=None):
     if request.session.get("page_num"):
         page = request.session['page_num'] - 1
         # write_shown_posts_analytics(request, request.session['post_list'])
+
+    time_array.append(round(time.time() - start, 2))
+
+
+    with open("out.csv", "a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(time_array)
 
     return render(request, template, context)
 
